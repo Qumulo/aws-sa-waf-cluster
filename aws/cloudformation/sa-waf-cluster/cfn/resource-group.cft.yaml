@@ -1,0 +1,79 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: This template creates an resource group for the QSTACK for easy filtering in Cloud Watch
+
+Parameters:
+  QStackID:
+    Type: String
+  QStackName:
+    Type: String
+  TopStackName:
+    Type: String
+  AllFlash:
+    Type: String
+
+Conditions:
+  HDD: !Not
+    - !Equals 
+      - !Ref AllFlash
+      - AF
+
+Resources:
+  ClusterRG:
+    Type: "AWS::ResourceGroups::Group" 
+    Properties: 
+      Name: !Sub "${TopStackName}-Qumulo-Cluster"
+      ResourceQuery: 
+        Type: "CLOUDFORMATION_STACK_1_0" 
+        Query: 
+          ResourceTypeFilters:
+            - "AWS::AllSupported" 
+          StackIdentifier: !Ref QStackID
+      Tags: 
+        - Key: Name
+          Value: !Ref "AWS::StackName"
+
+  ClusterRGSSD:
+    Type: "AWS::ResourceGroups::Group" 
+    Properties: 
+      Name: !Sub "${TopStackName}-Qumulo-Cluster-SSD"
+      ResourceQuery: 
+        Type: "TAG_FILTERS_1_0" 
+        Query: 
+          ResourceTypeFilters:
+            - "AWS::AllSupported" 
+          TagFilters:
+            - Key: Name
+              Values:
+                - !Sub "${QStackName}-gp2"
+                - !Sub "${QStackName}-gp3"
+      Tags: 
+        - Key: Name
+          Value: !Ref "AWS::StackName"
+
+  ClusterRGHDD:
+    Type: "AWS::ResourceGroups::Group" 
+    Condition: HDD
+    Properties: 
+      Name: !Sub "${TopStackName}-Qumulo-Cluster-HDD"
+      ResourceQuery: 
+        Type: "TAG_FILTERS_1_0" 
+        Query: 
+          ResourceTypeFilters:
+            - "AWS::AllSupported" 
+          TagFilters:
+            - Key: Name
+              Values:
+                - !Sub "${QStackName}-st1"
+                - !Sub "${QStackName}-sc1"
+      Tags: 
+        - Key: Name
+          Value: !Ref "AWS::StackName"
+
+Outputs:
+  QumuloClusterRG:
+    Value: !Ref ClusterRG
+  QumuloClusterSSDRG:
+    Value: !Ref ClusterRGSSD
+  QumuloClusterHDDRG:
+    Condition: HDD
+    Value: !Ref ClusterRGHDD

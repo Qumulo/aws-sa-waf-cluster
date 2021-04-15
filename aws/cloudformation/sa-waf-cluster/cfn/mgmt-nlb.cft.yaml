@@ -1,0 +1,121 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: This template instantiates an AWS Network Load Balancer connected to the Qumulo Cluster Static IP addresses, insuring reachability
+
+Parameters:
+  VPCID:
+    Type: String
+  PublicSubnetID:
+    Type: String
+  NodeIPs:
+    Type: String
+  NumNodes:
+    Type: String
+
+Conditions:
+  Provision5:  !Or [!Equals [!Ref NumNodes, "5"], Condition: Provision6]
+  Provision6:  !Or [!Equals [!Ref NumNodes, "6"], Condition: Provision7]
+  Provision7:  !Or [!Equals [!Ref NumNodes, "7"], Condition: Provision8]
+  Provision8:  !Or [!Equals [!Ref NumNodes, "8"], Condition: Provision9]
+  Provision9:  !Or [!Equals [!Ref NumNodes, "9"], Condition: Provision10]
+  Provision10:      !Equals [!Ref NumNodes, "10"]
+
+Resources:
+  NLBEIP:
+    Type: "AWS::EC2::EIP"
+    Properties:
+      Domain: vpc
+
+  NLB:
+    Type: "AWS::ElasticLoadBalancingV2::LoadBalancer"
+    Properties:
+      Name: !Join
+        - ""
+        - - "qumulo-mgmt-"
+          - !Select [2, !Split ["-", !Ref "AWS::StackName"]]
+      Type: network
+      IpAddressType: ipv4
+      Scheme: internet-facing
+      SubnetMappings: 
+        - AllocationId: !GetAtt
+          - NLBEIP
+          - AllocationId
+          SubnetId: !Ref PublicSubnetID
+      Tags:
+        - Key: Name
+          Value: !Join
+            - ""
+            - - Ref: "AWS::StackName"
+              - " - Qumulo Management NLB"
+
+  NLBTargetGroupMgmt:
+    Type: "AWS::ElasticLoadBalancingV2::TargetGroup"
+    Properties:
+      Name: !Join
+        - ""
+        - - "cluster-target-"
+          - !Select [2, !Split ["-", !Ref "AWS::StackName"]]
+      TargetType: ip
+      Protocol: TCP
+      Port: 80
+      TargetGroupAttributes:
+        - Key: stickiness.enabled
+          Value: "true"
+        - Key: stickiness.type
+          Value: source_ip
+      Targets:
+        - Id: !Select [0, !Split [", ", !Ref NodeIPs]]
+          Port: 443
+        - Id: !Select [1, !Split [", ", !Ref NodeIPs]]
+          Port: 443
+        - Id: !Select [2, !Split [", ", !Ref NodeIPs]]
+          Port: 443
+        - Id: !Select [3, !Split [", ", !Ref NodeIPs]]
+          Port: 443
+        - !If
+          - Provision5
+          - Id: !Select [4, !Split [", ", !Ref NodeIPs]]
+            Port: 443
+          - !Ref AWS::NoValue
+        - !If
+          - Provision6
+          - Id: !Select [5, !Split [", ", !Ref NodeIPs]]
+            Port: 443
+          - !Ref AWS::NoValue
+        - !If
+          - Provision7
+          - Id: !Select [6, !Split [", ", !Ref NodeIPs]]
+            Port: 443
+          - !Ref AWS::NoValue
+        - !If
+          - Provision8
+          - Id: !Select [7, !Split [", ", !Ref NodeIPs]]
+            Port: 443
+          - !Ref AWS::NoValue
+        - !If
+          - Provision9
+          - Id: !Select [8, !Split [", ", !Ref NodeIPs]]
+            Port: 443
+          - !Ref AWS::NoValue
+        - !If
+          - Provision10
+          - Id: !Select [9, !Split [", ", !Ref NodeIPs]]
+            Port: 443
+          - !Ref AWS::NoValue
+      VpcId: !Ref VPCID
+
+  NLBListenerHTTPS:
+    Type: "AWS::ElasticLoadBalancingV2::Listener"
+    Properties:
+      DefaultActions:
+      - Type: forward
+        TargetGroupArn: !Ref NLBTargetGroupMgmt
+      LoadBalancerArn: !Ref NLB
+      Port: 443
+      Protocol: TCP
+
+Outputs:
+  ManagementEIP:
+    Value: !Join
+      - ""
+      - - "https://"
+        - !Ref NLBEIP

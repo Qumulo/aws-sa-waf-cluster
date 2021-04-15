@@ -1,0 +1,14 @@
+{
+    "slot_count": 24,
+    "pairing_ratio": 2,
+    "working_spec": {
+        "VolumeType": "gp2",
+        "VolumeSize": 1000,
+        "DeleteOnTermination": true
+    },
+    "backing_spec": {
+        "VolumeType": "st1",
+        "VolumeSize": 10240,
+        "DeleteOnTermination": true
+    }
+}
