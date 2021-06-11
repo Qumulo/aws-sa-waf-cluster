@@ -1,9 +1,0 @@
-{
-    "slot_count": 8,
-    "pairing_ratio": 0,
-    "working_spec": {
-        "VolumeType": "gp2",
-        "VolumeSize": 128,
-        "DeleteOnTermination": true
-    }
-}
