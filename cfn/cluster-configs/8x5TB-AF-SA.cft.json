@@ -1,0 +1,3858 @@
+{
+    "Conditions": {
+        "HasEncryptionKey": {
+            "Fn::Not": [
+                {
+                    "Fn::Equals": [
+                        {
+                            "Ref": "VolumesEncryptionKey"
+                        },
+                        ""
+                    ]
+                }
+            ]
+        },
+        "HasIamInstanceProfile": {
+            "Fn::Not": [
+                {
+                    "Fn::Equals": [
+                        {
+                            "Ref": "IamInstanceProfile"
+                        },
+                        ""
+                    ]
+                }
+            ]
+        },
+        "HasInstanceRecoveryTopic": {
+            "Fn::Not": [
+                {
+                    "Fn::Equals": [
+                        {
+                            "Ref": "InstanceRecoveryTopic"
+                        },
+                        ""
+                    ]
+                }
+            ]
+        }
+    },
+    "Description": "Qumulo for AWS has the highest performance of any file storage system in the public cloud and a complete set of enterprise features, such as support for SMB, real-time visibility into the storage system, directory-based capacity quotas, and snapshots. Copyright (c) 2021 Qumulo, Inc. and distributed under the MIT License.",
+    "Metadata": {
+        "AWS::CloudFormation::Interface": {
+            "ParameterGroups": [
+                {
+                    "Label": {
+                        "default": "Amazon EC2 Configuration"
+                    },
+                    "Parameters": [
+                        "ClusterAMI",
+                        "InstanceType",
+                        "KeyName",
+                        "FloatingIPCount",
+                        "VolumesEncryptionKey",
+                        "IamInstanceProfile"
+                    ]
+                },
+                {
+                    "Label": {
+                        "default": "Qumulo Configuration"
+                    },
+                    "Parameters": [
+                        "ClusterName"
+                    ]
+                },
+                {
+                    "Label": {
+                        "default": "SNS Configuration"
+                    },
+                    "Parameters": [
+                        "InstanceRecoveryTopic"
+                    ]
+                },
+                {
+                    "Label": {
+                        "default": "Network Configuration"
+                    },
+                    "Parameters": [
+                        "VpcId",
+                        "SubnetId",
+                        "SgCidr"
+                    ]
+                }
+            ],
+            "ParameterLabels": {
+                "ClusterAMI": {
+                    "default": "Qumulo AMI ID"
+                },
+                "ClusterName": {
+                    "default": "Qumulo cluster name"
+                },
+                "FloatingIPCount": {
+                    "default": "EC2 Secondary IPs"
+                },
+                "IamInstanceProfile": {
+                    "default": "IAM Instance Profile"
+                },
+                "InstanceRecoveryTopic": {
+                    "default": "Instance recovery alarm SNS topic"
+                },
+                "InstanceType": {
+                    "default": "EC2 instance type"
+                },
+                "KeyName": {
+                    "default": "SSH key-pair name"
+                },
+                "SgCidr": {
+                    "default": "Security group IPv4 CIDR block"
+                },
+                "SubnetId": {
+                    "default": "Subnet ID in the VPC"
+                },
+                "VolumesEncryptionKey": {
+                    "default": "EBS volumes encryption key ID"
+                },
+                "VpcId": {
+                    "default": "VPC ID"
+                }
+            }
+        }
+    },
+    "Outputs": {
+        "AWSStackID": {
+            "Description": "AWS ARN for this stack",
+            "Value": {
+                "Ref": "AWS::StackId"
+            }
+        },
+        "AWSStackName": {
+            "Description": "AWS Name for this stack",
+            "Value": {
+                "Ref": "AWS::StackName"
+            }
+        },
+        "ClusterInstanceIDs": {
+            "Description": "List of the instance IDs of the nodes in your Qumulo Cluster",
+            "Value": {
+                "Fn::Join": [
+                    ", ",
+                    [
+                        {
+                            "Ref": "QumuloNode1"
+                        },
+                        {
+                            "Ref": "QumuloNode2"
+                        },
+                        {
+                            "Ref": "QumuloNode3"
+                        },
+                        {
+                            "Ref": "QumuloNode4"
+                        },
+                        {
+                            "Ref": "QumuloNode5"
+                        },
+                        {
+                            "Ref": "QumuloNode6"
+                        },
+                        {
+                            "Ref": "QumuloNode7"
+                        },
+                        {
+                            "Ref": "QumuloNode8"
+                        }
+                    ]
+                ]
+            }
+        },
+        "ClusterPlacementGroup": {
+            "Description": "The placement group created for the cluster",
+            "Value": {
+                "Ref": "QClusterGroup"
+            }
+        },
+        "ClusterPrivateIPs": {
+            "Description": "List of the primary private IPs of the nodes in your Qumulo Cluster",
+            "Value": {
+                "Fn::Join": [
+                    ", ",
+                    [
+                        {
+                            "Fn::GetAtt": [
+                                "QumuloNode1",
+                                "PrivateIp"
+                            ]
+                        },
+                        {
+                            "Fn::GetAtt": [
+                                "QumuloNode2",
+                                "PrivateIp"
+                            ]
+                        },
+                        {
+                            "Fn::GetAtt": [
+                                "QumuloNode3",
+                                "PrivateIp"
+                            ]
+                        },
+                        {
+                            "Fn::GetAtt": [
+                                "QumuloNode4",
+                                "PrivateIp"
+                            ]
+                        },
+                        {
+                            "Fn::GetAtt": [
+                                "QumuloNode5",
+                                "PrivateIp"
+                            ]
+                        },
+                        {
+                            "Fn::GetAtt": [
+                                "QumuloNode6",
+                                "PrivateIp"
+                            ]
+                        },
+                        {
+                            "Fn::GetAtt": [
+                                "QumuloNode7",
+                                "PrivateIp"
+                            ]
+                        },
+                        {
+                            "Fn::GetAtt": [
+                                "QumuloNode8",
+                                "PrivateIp"
+                            ]
+                        }
+                    ]
+                ]
+            }
+        },
+        "ClusterSGID": {
+            "Description": "The security group being used by the cluster network interfaces",
+            "Value": {
+                "Ref": "QumuloSecurityGroup"
+            }
+        },
+        "ClusterSecondaryPrivateIPs": {
+            "Description": "List of the secondary private IPs of the nodes in your Qumulo Cluster",
+            "Value": {
+                "Fn::Join": [
+                    ", ",
+                    [
+                        {
+                            "Fn::Join": [
+                                ", ",
+                                {
+                                    "Fn::GetAtt": [
+                                        "QumuloEni1",
+                                        "SecondaryPrivateIpAddresses"
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "Fn::Join": [
+                                ", ",
+                                {
+                                    "Fn::GetAtt": [
+                                        "QumuloEni2",
+                                        "SecondaryPrivateIpAddresses"
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "Fn::Join": [
+                                ", ",
+                                {
+                                    "Fn::GetAtt": [
+                                        "QumuloEni3",
+                                        "SecondaryPrivateIpAddresses"
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "Fn::Join": [
+                                ", ",
+                                {
+                                    "Fn::GetAtt": [
+                                        "QumuloEni4",
+                                        "SecondaryPrivateIpAddresses"
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "Fn::Join": [
+                                ", ",
+                                {
+                                    "Fn::GetAtt": [
+                                        "QumuloEni5",
+                                        "SecondaryPrivateIpAddresses"
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "Fn::Join": [
+                                ", ",
+                                {
+                                    "Fn::GetAtt": [
+                                        "QumuloEni6",
+                                        "SecondaryPrivateIpAddresses"
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "Fn::Join": [
+                                ", ",
+                                {
+                                    "Fn::GetAtt": [
+                                        "QumuloEni7",
+                                        "SecondaryPrivateIpAddresses"
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "Fn::Join": [
+                                ", ",
+                                {
+                                    "Fn::GetAtt": [
+                                        "QumuloEni8",
+                                        "SecondaryPrivateIpAddresses"
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                ]
+            }
+        },
+        "LinkToManagement": {
+            "Description": "Use to launch the Qumulo Admin Console",
+            "Value": {
+                "Fn::Join": [
+                    "",
+                    [
+                        "https://",
+                        {
+                            "Fn::GetAtt": [
+                                "QumuloNode1",
+                                "PrivateIp"
+                            ]
+                        }
+                    ]
+                ]
+            }
+        },
+        "QumuloKnowledgeBase": {
+            "Description": "Knowledge Base for Qumulo in public clouds",
+            "Value": "https://qf2.co/cloud-kb"
+        },
+        "TemporaryPassword": {
+            "Description": "Temporary admin password for your Qumulo cluster (exclude quotes, matches node1 instance ID).",
+            "Value": {
+                "Fn::Join": [
+                    "",
+                    [
+                        "\"",
+                        {
+                            "Ref": "QumuloNode1"
+                        },
+                        "\""
+                    ]
+                ]
+            }
+        }
+    },
+    "Parameters": {
+        "ClusterAMI": {
+            "Description": "Qumulo cluster AWS AMI ID",
+            "Type": "String"
+        },
+        "ClusterName": {
+            "AllowedPattern": "^[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]$",
+            "ConstraintDescription": "Name must be an alpha-numeric string between 2 and 15 characters. Dash (-) is allowed if not the first or last character.",
+            "Description": "Qumulo cluster name (2-15 alpha-numeric characters and -)",
+            "MaxLength": 15,
+            "MinLength": 2,
+            "Type": "String"
+        },
+        "FloatingIPCount": {
+            "AllowedValues": [
+                "0",
+                "1",
+                "2",
+                "3",
+                "4",
+                "5",
+                "6",
+                "7",
+                "8",
+                "9",
+                "10"
+            ],
+            "Default": "0",
+            "Description": "Optionally enter the number of EC2 Secondary IPs to configure for use as Floating IPs on the Qumulo Cluster.",
+            "Type": "String"
+        },
+        "IamInstanceProfile": {
+            "Default": "",
+            "Description": "Optionally enter the name (*not* the ARN) of the IAM instance profile to be assigned to each instance in the cluster.",
+            "Type": "String"
+        },
+        "InstanceRecoveryTopic": {
+            "Default": "",
+            "Description": "Optionally enter the ARN of an SNS topic that receives messages when an instance alarm is triggered.",
+            "Type": "String"
+        },
+        "InstanceType": {
+            "AllowedValues": [
+                "m5.xlarge",
+                "m5.2xlarge",
+                "m5.4xlarge",
+                "m5.8xlarge",
+                "m5.12xlarge",
+                "m5.16xlarge",
+                "m5.24xlarge",
+                "c5n.xlarge",
+                "c5n.2xlarge",
+                "c5n.4xlarge",
+                "c5n.9xlarge",
+                "c5n.18xlarge"
+            ],
+            "ConstraintDescription": "Must be a Qumulo supported EC2 instance type.",
+            "Default": "m5.4xlarge",
+            "Description": "EC2 instance type for Qumulo node",
+            "Type": "String"
+        },
+        "KeyName": {
+            "Description": "Name of an existing EC2 KeyPair to enable SSH access to the node",
+            "Type": "AWS::EC2::KeyPair::KeyName"
+        },
+        "SgCidr": {
+            "AllowedPattern": "^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/(3[0-2]|[1-2][0-9]|[0-9]))$",
+            "ConstraintDescription": "Must be specified as an IPv4 address followed by / and a subnet mask of 0-32.",
+            "Description": "An IPv4 CIDR block for specifying the generated security group's allowed addresses for inbound traffic. Set to x.x.x.x/32 to allow one specific IP address access, 0.0.0.0/0 to allow all IP addresses access, or another CIDR range.",
+            "Type": "String"
+        },
+        "SubnetId": {
+            "ConstraintDescription": "Must be the ID of an existing Subnet.",
+            "Description": "ID of the Subnet in which to deploy Qumulo.",
+            "Type": "AWS::EC2::Subnet::Id"
+        },
+        "VolumesEncryptionKey": {
+            "Default": "",
+            "Description": "The KMS Key to encrypt the volumes. Use either a key ID, ARN, or an Alias. Aliases must begin with alias/ followed by the name, such as alias/exampleKey. If empty, the default KMS EBS key will be used. Choosing an invalid key name will cause the instance to fail to launch.",
+            "Type": "String"
+        },
+        "VpcId": {
+            "ConstraintDescription": "Must be the ID of an existing VPC.",
+            "Description": "ID of the VPC in which to deploy Qumulo.",
+            "Type": "AWS::EC2::VPC::Id"
+        }
+    },
+    "Resources": {
+        "CWRecoveryAlarmQumuloNode1": {
+            "Properties": {
+                "AlarmActions": [
+                    {
+                        "Fn::Sub": "arn:aws:automate:${AWS::Region}:ec2:recover"
+                    },
+                    {
+                        "Fn::If": [
+                            "HasInstanceRecoveryTopic",
+                            {
+                                "Ref": "InstanceRecoveryTopic"
+                            },
+                            {
+                                "Ref": "AWS::NoValue"
+                            }
+                        ]
+                    }
+                ],
+                "AlarmDescription": {
+                    "Fn::Sub": "Automatic recovery alarm for ${ClusterName}-1"
+                },
+                "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+                "DatapointsToAlarm": 2,
+                "Dimensions": [
+                    {
+                        "Name": "InstanceId",
+                        "Value": {
+                            "Ref": "QumuloNode1"
+                        }
+                    }
+                ],
+                "EvaluationPeriods": 2,
+                "MetricName": "StatusCheckFailed_System",
+                "Namespace": "AWS/EC2",
+                "OKActions": [
+                    {
+                        "Fn::If": [
+                            "HasInstanceRecoveryTopic",
+                            {
+                                "Ref": "InstanceRecoveryTopic"
+                            },
+                            {
+                                "Ref": "AWS::NoValue"
+                            }
+                        ]
+                    }
+                ],
+                "Period": 60,
+                "Statistic": "Maximum",
+                "Threshold": 1.0
+            },
+            "Type": "AWS::CloudWatch::Alarm"
+        },
+        "CWRecoveryAlarmQumuloNode2": {
+            "Properties": {
+                "AlarmActions": [
+                    {
+                        "Fn::Sub": "arn:aws:automate:${AWS::Region}:ec2:recover"
+                    },
+                    {
+                        "Fn::If": [
+                            "HasInstanceRecoveryTopic",
+                            {
+                                "Ref": "InstanceRecoveryTopic"
+                            },
+                            {
+                                "Ref": "AWS::NoValue"
+                            }
+                        ]
+                    }
+                ],
+                "AlarmDescription": {
+                    "Fn::Sub": "Automatic recovery alarm for ${ClusterName}-2"
+                },
+                "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+                "DatapointsToAlarm": 2,
+                "Dimensions": [
+                    {
+                        "Name": "InstanceId",
+                        "Value": {
+                            "Ref": "QumuloNode2"
+                        }
+                    }
+                ],
+                "EvaluationPeriods": 2,
+                "MetricName": "StatusCheckFailed_System",
+                "Namespace": "AWS/EC2",
+                "OKActions": [
+                    {
+                        "Fn::If": [
+                            "HasInstanceRecoveryTopic",
+                            {
+                                "Ref": "InstanceRecoveryTopic"
+                            },
+                            {
+                                "Ref": "AWS::NoValue"
+                            }
+                        ]
+                    }
+                ],
+                "Period": 60,
+                "Statistic": "Maximum",
+                "Threshold": 1.0
+            },
+            "Type": "AWS::CloudWatch::Alarm"
+        },
+        "CWRecoveryAlarmQumuloNode3": {
+            "Properties": {
+                "AlarmActions": [
+                    {
+                        "Fn::Sub": "arn:aws:automate:${AWS::Region}:ec2:recover"
+                    },
+                    {
+                        "Fn::If": [
+                            "HasInstanceRecoveryTopic",
+                            {
+                                "Ref": "InstanceRecoveryTopic"
+                            },
+                            {
+                                "Ref": "AWS::NoValue"
+                            }
+                        ]
+                    }
+                ],
+                "AlarmDescription": {
+                    "Fn::Sub": "Automatic recovery alarm for ${ClusterName}-3"
+                },
+                "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+                "DatapointsToAlarm": 2,
+                "Dimensions": [
+                    {
+                        "Name": "InstanceId",
+                        "Value": {
+                            "Ref": "QumuloNode3"
+                        }
+                    }
+                ],
+                "EvaluationPeriods": 2,
+                "MetricName": "StatusCheckFailed_System",
+                "Namespace": "AWS/EC2",
+                "OKActions": [
+                    {
+                        "Fn::If": [
+                            "HasInstanceRecoveryTopic",
+                            {
+                                "Ref": "InstanceRecoveryTopic"
+                            },
+                            {
+                                "Ref": "AWS::NoValue"
+                            }
+                        ]
+                    }
+                ],
+                "Period": 60,
+                "Statistic": "Maximum",
+                "Threshold": 1.0
+            },
+            "Type": "AWS::CloudWatch::Alarm"
+        },
+        "CWRecoveryAlarmQumuloNode4": {
+            "Properties": {
+                "AlarmActions": [
+                    {
+                        "Fn::Sub": "arn:aws:automate:${AWS::Region}:ec2:recover"
+                    },
+                    {
+                        "Fn::If": [
+                            "HasInstanceRecoveryTopic",
+                            {
+                                "Ref": "InstanceRecoveryTopic"
+                            },
+                            {
+                                "Ref": "AWS::NoValue"
+                            }
+                        ]
+                    }
+                ],
+                "AlarmDescription": {
+                    "Fn::Sub": "Automatic recovery alarm for ${ClusterName}-4"
+                },
+                "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+                "DatapointsToAlarm": 2,
+                "Dimensions": [
+                    {
+                        "Name": "InstanceId",
+                        "Value": {
+                            "Ref": "QumuloNode4"
+                        }
+                    }
+                ],
+                "EvaluationPeriods": 2,
+                "MetricName": "StatusCheckFailed_System",
+                "Namespace": "AWS/EC2",
+                "OKActions": [
+                    {
+                        "Fn::If": [
+                            "HasInstanceRecoveryTopic",
+                            {
+                                "Ref": "InstanceRecoveryTopic"
+                            },
+                            {
+                                "Ref": "AWS::NoValue"
+                            }
+                        ]
+                    }
+                ],
+                "Period": 60,
+                "Statistic": "Maximum",
+                "Threshold": 1.0
+            },
+            "Type": "AWS::CloudWatch::Alarm"
+        },
+        "CWRecoveryAlarmQumuloNode5": {
+            "Properties": {
+                "AlarmActions": [
+                    {
+                        "Fn::Sub": "arn:aws:automate:${AWS::Region}:ec2:recover"
+                    },
+                    {
+                        "Fn::If": [
+                            "HasInstanceRecoveryTopic",
+                            {
+                                "Ref": "InstanceRecoveryTopic"
+                            },
+                            {
+                                "Ref": "AWS::NoValue"
+                            }
+                        ]
+                    }
+                ],
+                "AlarmDescription": {
+                    "Fn::Sub": "Automatic recovery alarm for ${ClusterName}-5"
+                },
+                "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+                "DatapointsToAlarm": 2,
+                "Dimensions": [
+                    {
+                        "Name": "InstanceId",
+                        "Value": {
+                            "Ref": "QumuloNode5"
+                        }
+                    }
+                ],
+                "EvaluationPeriods": 2,
+                "MetricName": "StatusCheckFailed_System",
+                "Namespace": "AWS/EC2",
+                "OKActions": [
+                    {
+                        "Fn::If": [
+                            "HasInstanceRecoveryTopic",
+                            {
+                                "Ref": "InstanceRecoveryTopic"
+                            },
+                            {
+                                "Ref": "AWS::NoValue"
+                            }
+                        ]
+                    }
+                ],
+                "Period": 60,
+                "Statistic": "Maximum",
+                "Threshold": 1.0
+            },
+            "Type": "AWS::CloudWatch::Alarm"
+        },
+        "CWRecoveryAlarmQumuloNode6": {
+            "Properties": {
+                "AlarmActions": [
+                    {
+                        "Fn::Sub": "arn:aws:automate:${AWS::Region}:ec2:recover"
+                    },
+                    {
+                        "Fn::If": [
+                            "HasInstanceRecoveryTopic",
+                            {
+                                "Ref": "InstanceRecoveryTopic"
+                            },
+                            {
+                                "Ref": "AWS::NoValue"
+                            }
+                        ]
+                    }
+                ],
+                "AlarmDescription": {
+                    "Fn::Sub": "Automatic recovery alarm for ${ClusterName}-6"
+                },
+                "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+                "DatapointsToAlarm": 2,
+                "Dimensions": [
+                    {
+                        "Name": "InstanceId",
+                        "Value": {
+                            "Ref": "QumuloNode6"
+                        }
+                    }
+                ],
+                "EvaluationPeriods": 2,
+                "MetricName": "StatusCheckFailed_System",
+                "Namespace": "AWS/EC2",
+                "OKActions": [
+                    {
+                        "Fn::If": [
+                            "HasInstanceRecoveryTopic",
+                            {
+                                "Ref": "InstanceRecoveryTopic"
+                            },
+                            {
+                                "Ref": "AWS::NoValue"
+                            }
+                        ]
+                    }
+                ],
+                "Period": 60,
+                "Statistic": "Maximum",
+                "Threshold": 1.0
+            },
+            "Type": "AWS::CloudWatch::Alarm"
+        },
+        "CWRecoveryAlarmQumuloNode7": {
+            "Properties": {
+                "AlarmActions": [
+                    {
+                        "Fn::Sub": "arn:aws:automate:${AWS::Region}:ec2:recover"
+                    },
+                    {
+                        "Fn::If": [
+                            "HasInstanceRecoveryTopic",
+                            {
+                                "Ref": "InstanceRecoveryTopic"
+                            },
+                            {
+                                "Ref": "AWS::NoValue"
+                            }
+                        ]
+                    }
+                ],
+                "AlarmDescription": {
+                    "Fn::Sub": "Automatic recovery alarm for ${ClusterName}-7"
+                },
+                "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+                "DatapointsToAlarm": 2,
+                "Dimensions": [
+                    {
+                        "Name": "InstanceId",
+                        "Value": {
+                            "Ref": "QumuloNode7"
+                        }
+                    }
+                ],
+                "EvaluationPeriods": 2,
+                "MetricName": "StatusCheckFailed_System",
+                "Namespace": "AWS/EC2",
+                "OKActions": [
+                    {
+                        "Fn::If": [
+                            "HasInstanceRecoveryTopic",
+                            {
+                                "Ref": "InstanceRecoveryTopic"
+                            },
+                            {
+                                "Ref": "AWS::NoValue"
+                            }
+                        ]
+                    }
+                ],
+                "Period": 60,
+                "Statistic": "Maximum",
+                "Threshold": 1.0
+            },
+            "Type": "AWS::CloudWatch::Alarm"
+        },
+        "CWRecoveryAlarmQumuloNode8": {
+            "Properties": {
+                "AlarmActions": [
+                    {
+                        "Fn::Sub": "arn:aws:automate:${AWS::Region}:ec2:recover"
+                    },
+                    {
+                        "Fn::If": [
+                            "HasInstanceRecoveryTopic",
+                            {
+                                "Ref": "InstanceRecoveryTopic"
+                            },
+                            {
+                                "Ref": "AWS::NoValue"
+                            }
+                        ]
+                    }
+                ],
+                "AlarmDescription": {
+                    "Fn::Sub": "Automatic recovery alarm for ${ClusterName}-8"
+                },
+                "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+                "DatapointsToAlarm": 2,
+                "Dimensions": [
+                    {
+                        "Name": "InstanceId",
+                        "Value": {
+                            "Ref": "QumuloNode8"
+                        }
+                    }
+                ],
+                "EvaluationPeriods": 2,
+                "MetricName": "StatusCheckFailed_System",
+                "Namespace": "AWS/EC2",
+                "OKActions": [
+                    {
+                        "Fn::If": [
+                            "HasInstanceRecoveryTopic",
+                            {
+                                "Ref": "InstanceRecoveryTopic"
+                            },
+                            {
+                                "Ref": "AWS::NoValue"
+                            }
+                        ]
+                    }
+                ],
+                "Period": 60,
+                "Statistic": "Maximum",
+                "Threshold": 1.0
+            },
+            "Type": "AWS::CloudWatch::Alarm"
+        },
+        "QClusterGroup": {
+            "Properties": {
+                "Strategy": "cluster"
+            },
+            "Type": "AWS::EC2::PlacementGroup"
+        },
+        "QumuloEni1": {
+            "Properties": {
+                "GroupSet": [
+                    {
+                        "Ref": "QumuloSecurityGroup"
+                    }
+                ],
+                "SecondaryPrivateIpAddressCount": {
+                    "Ref": "FloatingIPCount"
+                },
+                "SubnetId": {
+                    "Ref": "SubnetId"
+                }
+            },
+            "Type": "AWS::EC2::NetworkInterface"
+        },
+        "QumuloEni2": {
+            "Properties": {
+                "GroupSet": [
+                    {
+                        "Ref": "QumuloSecurityGroup"
+                    }
+                ],
+                "SecondaryPrivateIpAddressCount": {
+                    "Ref": "FloatingIPCount"
+                },
+                "SubnetId": {
+                    "Ref": "SubnetId"
+                }
+            },
+            "Type": "AWS::EC2::NetworkInterface"
+        },
+        "QumuloEni3": {
+            "Properties": {
+                "GroupSet": [
+                    {
+                        "Ref": "QumuloSecurityGroup"
+                    }
+                ],
+                "SecondaryPrivateIpAddressCount": {
+                    "Ref": "FloatingIPCount"
+                },
+                "SubnetId": {
+                    "Ref": "SubnetId"
+                }
+            },
+            "Type": "AWS::EC2::NetworkInterface"
+        },
+        "QumuloEni4": {
+            "Properties": {
+                "GroupSet": [
+                    {
+                        "Ref": "QumuloSecurityGroup"
+                    }
+                ],
+                "SecondaryPrivateIpAddressCount": {
+                    "Ref": "FloatingIPCount"
+                },
+                "SubnetId": {
+                    "Ref": "SubnetId"
+                }
+            },
+            "Type": "AWS::EC2::NetworkInterface"
+        },
+        "QumuloEni5": {
+            "Properties": {
+                "GroupSet": [
+                    {
+                        "Ref": "QumuloSecurityGroup"
+                    }
+                ],
+                "SecondaryPrivateIpAddressCount": {
+                    "Ref": "FloatingIPCount"
+                },
+                "SubnetId": {
+                    "Ref": "SubnetId"
+                }
+            },
+            "Type": "AWS::EC2::NetworkInterface"
+        },
+        "QumuloEni6": {
+            "Properties": {
+                "GroupSet": [
+                    {
+                        "Ref": "QumuloSecurityGroup"
+                    }
+                ],
+                "SecondaryPrivateIpAddressCount": {
+                    "Ref": "FloatingIPCount"
+                },
+                "SubnetId": {
+                    "Ref": "SubnetId"
+                }
+            },
+            "Type": "AWS::EC2::NetworkInterface"
+        },
+        "QumuloEni7": {
+            "Properties": {
+                "GroupSet": [
+                    {
+                        "Ref": "QumuloSecurityGroup"
+                    }
+                ],
+                "SecondaryPrivateIpAddressCount": {
+                    "Ref": "FloatingIPCount"
+                },
+                "SubnetId": {
+                    "Ref": "SubnetId"
+                }
+            },
+            "Type": "AWS::EC2::NetworkInterface"
+        },
+        "QumuloEni8": {
+            "Properties": {
+                "GroupSet": [
+                    {
+                        "Ref": "QumuloSecurityGroup"
+                    }
+                ],
+                "SecondaryPrivateIpAddressCount": {
+                    "Ref": "FloatingIPCount"
+                },
+                "SubnetId": {
+                    "Ref": "SubnetId"
+                }
+            },
+            "Type": "AWS::EC2::NetworkInterface"
+        },
+        "QumuloNode1": {
+            "Properties": {
+                "BlockDeviceMappings": [
+                    {
+                        "DeviceName": "/dev/sda1",
+                        "Ebs": {
+                            "Encrypted": true,
+                            "KmsKeyId": {
+                                "Fn::If": [
+                                    "HasEncryptionKey",
+                                    {
+                                        "Ref": "VolumesEncryptionKey"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/xvdb",
+                        "Ebs": {
+                            "DeleteOnTermination": true,
+                            "Encrypted": true,
+                            "KmsKeyId": {
+                                "Fn::If": [
+                                    "HasEncryptionKey",
+                                    {
+                                        "Ref": "VolumesEncryptionKey"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            },
+                            "VolumeSize": 500,
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/xvdc",
+                        "Ebs": {
+                            "DeleteOnTermination": true,
+                            "Encrypted": true,
+                            "KmsKeyId": {
+                                "Fn::If": [
+                                    "HasEncryptionKey",
+                                    {
+                                        "Ref": "VolumesEncryptionKey"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            },
+                            "VolumeSize": 500,
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/xvdd",
+                        "Ebs": {
+                            "DeleteOnTermination": true,
+                            "Encrypted": true,
+                            "KmsKeyId": {
+                                "Fn::If": [
+                                    "HasEncryptionKey",
+                                    {
+                                        "Ref": "VolumesEncryptionKey"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            },
+                            "VolumeSize": 500,
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/xvde",
+                        "Ebs": {
+                            "DeleteOnTermination": true,
+                            "Encrypted": true,
+                            "KmsKeyId": {
+                                "Fn::If": [
+                                    "HasEncryptionKey",
+                                    {
+                                        "Ref": "VolumesEncryptionKey"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            },
+                            "VolumeSize": 500,
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/xvdf",
+                        "Ebs": {
+                            "DeleteOnTermination": true,
+                            "Encrypted": true,
+                            "KmsKeyId": {
+                                "Fn::If": [
+                                    "HasEncryptionKey",
+                                    {
+                                        "Ref": "VolumesEncryptionKey"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            },
+                            "VolumeSize": 500,
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/xvdg",
+                        "Ebs": {
+                            "DeleteOnTermination": true,
+                            "Encrypted": true,
+                            "KmsKeyId": {
+                                "Fn::If": [
+                                    "HasEncryptionKey",
+                                    {
+                                        "Ref": "VolumesEncryptionKey"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            },
+                            "VolumeSize": 500,
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/xvdh",
+                        "Ebs": {
+                            "DeleteOnTermination": true,
+                            "Encrypted": true,
+                            "KmsKeyId": {
+                                "Fn::If": [
+                                    "HasEncryptionKey",
+                                    {
+                                        "Ref": "VolumesEncryptionKey"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            },
+                            "VolumeSize": 500,
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/xvdi",
+                        "Ebs": {
+                            "DeleteOnTermination": true,
+                            "Encrypted": true,
+                            "KmsKeyId": {
+                                "Fn::If": [
+                                    "HasEncryptionKey",
+                                    {
+                                        "Ref": "VolumesEncryptionKey"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            },
+                            "VolumeSize": 500,
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/xvdj",
+                        "Ebs": {
+                            "DeleteOnTermination": true,
+                            "Encrypted": true,
+                            "KmsKeyId": {
+                                "Fn::If": [
+                                    "HasEncryptionKey",
+                                    {
+                                        "Ref": "VolumesEncryptionKey"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            },
+                            "VolumeSize": 500,
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/xvdk",
+                        "Ebs": {
+                            "DeleteOnTermination": true,
+                            "Encrypted": true,
+                            "KmsKeyId": {
+                                "Fn::If": [
+                                    "HasEncryptionKey",
+                                    {
+                                        "Ref": "VolumesEncryptionKey"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            },
+                            "VolumeSize": 500,
+                            "VolumeType": "gp2"
+                        }
+                    }
+                ],
+                "EbsOptimized": true,
+                "IamInstanceProfile": {
+                    "Fn::If": [
+                        "HasIamInstanceProfile",
+                        {
+                            "Ref": "IamInstanceProfile"
+                        },
+                        {
+                            "Ref": "AWS::NoValue"
+                        }
+                    ]
+                },
+                "ImageId": {
+                    "Ref": "ClusterAMI"
+                },
+                "InstanceType": {
+                    "Ref": "InstanceType"
+                },
+                "KeyName": {
+                    "Ref": "KeyName"
+                },
+                "NetworkInterfaces": [
+                    {
+                        "DeviceIndex": "0",
+                        "NetworkInterfaceId": {
+                            "Ref": "QumuloEni1"
+                        }
+                    }
+                ],
+                "PlacementGroupName": {
+                    "Ref": "QClusterGroup"
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Fn::Join": [
+                                " - ",
+                                [
+                                    {
+                                        "Ref": "AWS::StackName"
+                                    },
+                                    "QumuloNode1"
+                                ]
+                            ]
+                        }
+                    }
+                ],
+                "UserData": {
+                    "Fn::Base64": {
+                        "Fn::Join": [
+                            "",
+                            [
+                                "{",
+                                "\"spec_info\": ",
+                                "{",
+                                "    \"slot_specs\": [",
+                                "        {",
+                                "            \"drive_bay\": \"/dev/xvdb\",",
+                                "            \"disk_role\": \"working\",",
+                                "            \"disk_size\": 536870912000",
+                                "        },",
+                                "        {",
+                                "            \"drive_bay\": \"/dev/xvdc\",",
+                                "            \"disk_role\": \"working\",",
+                                "            \"disk_size\": 536870912000",
+                                "        },",
+                                "        {",
+                                "            \"drive_bay\": \"/dev/xvdd\",",
+                                "            \"disk_role\": \"working\",",
+                                "            \"disk_size\": 536870912000",
+                                "        },",
+                                "        {",
+                                "            \"drive_bay\": \"/dev/xvde\",",
+                                "            \"disk_role\": \"working\",",
+                                "            \"disk_size\": 536870912000",
+                                "        },",
+                                "        {",
+                                "            \"drive_bay\": \"/dev/xvdf\",",
+                                "            \"disk_role\": \"working\",",
+                                "            \"disk_size\": 536870912000",
+                                "        },",
+                                "        {",
+                                "            \"drive_bay\": \"/dev/xvdg\",",
+                                "            \"disk_role\": \"working\",",
+                                "            \"disk_size\": 536870912000",
+                                "        },",
+                                "        {",
+                                "            \"drive_bay\": \"/dev/xvdh\",",
+                                "            \"disk_role\": \"working\",",
+                                "            \"disk_size\": 536870912000",
+                                "        },",
+                                "        {",
+                                "            \"drive_bay\": \"/dev/xvdi\",",
+                                "            \"disk_role\": \"working\",",
+                                "            \"disk_size\": 536870912000",
+                                "        },",
+                                "        {",
+                                "            \"drive_bay\": \"/dev/xvdj\",",
+                                "            \"disk_role\": \"working\",",
+                                "            \"disk_size\": 536870912000",
+                                "        },",
+                                "        {",
+                                "            \"drive_bay\": \"/dev/xvdk\",",
+                                "            \"disk_role\": \"working\",",
+                                "            \"disk_size\": 536870912000",
+                                "        }",
+                                "    ]",
+                                "}",
+                                "}"
+                            ]
+                        ]
+                    }
+                }
+            },
+            "Type": "AWS::EC2::Instance"
+        },
+        "QumuloNode2": {
+            "Properties": {
+                "BlockDeviceMappings": [
+                    {
+                        "DeviceName": "/dev/sda1",
+                        "Ebs": {
+                            "Encrypted": true,
+                            "KmsKeyId": {
+                                "Fn::If": [
+                                    "HasEncryptionKey",
+                                    {
+                                        "Ref": "VolumesEncryptionKey"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/xvdb",
+                        "Ebs": {
+                            "DeleteOnTermination": true,
+                            "Encrypted": true,
+                            "KmsKeyId": {
+                                "Fn::If": [
+                                    "HasEncryptionKey",
+                                    {
+                                        "Ref": "VolumesEncryptionKey"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            },
+                            "VolumeSize": 500,
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/xvdc",
+                        "Ebs": {
+                            "DeleteOnTermination": true,
+                            "Encrypted": true,
+                            "KmsKeyId": {
+                                "Fn::If": [
+                                    "HasEncryptionKey",
+                                    {
+                                        "Ref": "VolumesEncryptionKey"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            },
+                            "VolumeSize": 500,
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/xvdd",
+                        "Ebs": {
+                            "DeleteOnTermination": true,
+                            "Encrypted": true,
+                            "KmsKeyId": {
+                                "Fn::If": [
+                                    "HasEncryptionKey",
+                                    {
+                                        "Ref": "VolumesEncryptionKey"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            },
+                            "VolumeSize": 500,
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/xvde",
+                        "Ebs": {
+                            "DeleteOnTermination": true,
+                            "Encrypted": true,
+                            "KmsKeyId": {
+                                "Fn::If": [
+                                    "HasEncryptionKey",
+                                    {
+                                        "Ref": "VolumesEncryptionKey"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            },
+                            "VolumeSize": 500,
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/xvdf",
+                        "Ebs": {
+                            "DeleteOnTermination": true,
+                            "Encrypted": true,
+                            "KmsKeyId": {
+                                "Fn::If": [
+                                    "HasEncryptionKey",
+                                    {
+                                        "Ref": "VolumesEncryptionKey"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            },
+                            "VolumeSize": 500,
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/xvdg",
+                        "Ebs": {
+                            "DeleteOnTermination": true,
+                            "Encrypted": true,
+                            "KmsKeyId": {
+                                "Fn::If": [
+                                    "HasEncryptionKey",
+                                    {
+                                        "Ref": "VolumesEncryptionKey"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            },
+                            "VolumeSize": 500,
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/xvdh",
+                        "Ebs": {
+                            "DeleteOnTermination": true,
+                            "Encrypted": true,
+                            "KmsKeyId": {
+                                "Fn::If": [
+                                    "HasEncryptionKey",
+                                    {
+                                        "Ref": "VolumesEncryptionKey"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            },
+                            "VolumeSize": 500,
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/xvdi",
+                        "Ebs": {
+                            "DeleteOnTermination": true,
+                            "Encrypted": true,
+                            "KmsKeyId": {
+                                "Fn::If": [
+                                    "HasEncryptionKey",
+                                    {
+                                        "Ref": "VolumesEncryptionKey"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            },
+                            "VolumeSize": 500,
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/xvdj",
+                        "Ebs": {
+                            "DeleteOnTermination": true,
+                            "Encrypted": true,
+                            "KmsKeyId": {
+                                "Fn::If": [
+                                    "HasEncryptionKey",
+                                    {
+                                        "Ref": "VolumesEncryptionKey"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            },
+                            "VolumeSize": 500,
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/xvdk",
+                        "Ebs": {
+                            "DeleteOnTermination": true,
+                            "Encrypted": true,
+                            "KmsKeyId": {
+                                "Fn::If": [
+                                    "HasEncryptionKey",
+                                    {
+                                        "Ref": "VolumesEncryptionKey"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            },
+                            "VolumeSize": 500,
+                            "VolumeType": "gp2"
+                        }
+                    }
+                ],
+                "EbsOptimized": true,
+                "IamInstanceProfile": {
+                    "Fn::If": [
+                        "HasIamInstanceProfile",
+                        {
+                            "Ref": "IamInstanceProfile"
+                        },
+                        {
+                            "Ref": "AWS::NoValue"
+                        }
+                    ]
+                },
+                "ImageId": {
+                    "Ref": "ClusterAMI"
+                },
+                "InstanceType": {
+                    "Ref": "InstanceType"
+                },
+                "KeyName": {
+                    "Ref": "KeyName"
+                },
+                "NetworkInterfaces": [
+                    {
+                        "DeviceIndex": "0",
+                        "NetworkInterfaceId": {
+                            "Ref": "QumuloEni2"
+                        }
+                    }
+                ],
+                "PlacementGroupName": {
+                    "Ref": "QClusterGroup"
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Fn::Join": [
+                                " - ",
+                                [
+                                    {
+                                        "Ref": "AWS::StackName"
+                                    },
+                                    "QumuloNode2"
+                                ]
+                            ]
+                        }
+                    }
+                ],
+                "UserData": {
+                    "Fn::Base64": {
+                        "Fn::Join": [
+                            "",
+                            [
+                                "{",
+                                "\"spec_info\": ",
+                                "{",
+                                "    \"slot_specs\": [",
+                                "        {",
+                                "            \"drive_bay\": \"/dev/xvdb\",",
+                                "            \"disk_role\": \"working\",",
+                                "            \"disk_size\": 536870912000",
+                                "        },",
+                                "        {",
+                                "            \"drive_bay\": \"/dev/xvdc\",",
+                                "            \"disk_role\": \"working\",",
+                                "            \"disk_size\": 536870912000",
+                                "        },",
+                                "        {",
+                                "            \"drive_bay\": \"/dev/xvdd\",",
+                                "            \"disk_role\": \"working\",",
+                                "            \"disk_size\": 536870912000",
+                                "        },",
+                                "        {",
+                                "            \"drive_bay\": \"/dev/xvde\",",
+                                "            \"disk_role\": \"working\",",
+                                "            \"disk_size\": 536870912000",
+                                "        },",
+                                "        {",
+                                "            \"drive_bay\": \"/dev/xvdf\",",
+                                "            \"disk_role\": \"working\",",
+                                "            \"disk_size\": 536870912000",
+                                "        },",
+                                "        {",
+                                "            \"drive_bay\": \"/dev/xvdg\",",
+                                "            \"disk_role\": \"working\",",
+                                "            \"disk_size\": 536870912000",
+                                "        },",
+                                "        {",
+                                "            \"drive_bay\": \"/dev/xvdh\",",
+                                "            \"disk_role\": \"working\",",
+                                "            \"disk_size\": 536870912000",
+                                "        },",
+                                "        {",
+                                "            \"drive_bay\": \"/dev/xvdi\",",
+                                "            \"disk_role\": \"working\",",
+                                "            \"disk_size\": 536870912000",
+                                "        },",
+                                "        {",
+                                "            \"drive_bay\": \"/dev/xvdj\",",
+                                "            \"disk_role\": \"working\",",
+                                "            \"disk_size\": 536870912000",
+                                "        },",
+                                "        {",
+                                "            \"drive_bay\": \"/dev/xvdk\",",
+                                "            \"disk_role\": \"working\",",
+                                "            \"disk_size\": 536870912000",
+                                "        }",
+                                "    ]",
+                                "}",
+                                "}"
+                            ]
+                        ]
+                    }
+                }
+            },
+            "Type": "AWS::EC2::Instance"
+        },
+        "QumuloNode3": {
+            "Properties": {
+                "BlockDeviceMappings": [
+                    {
+                        "DeviceName": "/dev/sda1",
+                        "Ebs": {
+                            "Encrypted": true,
+                            "KmsKeyId": {
+                                "Fn::If": [
+                                    "HasEncryptionKey",
+                                    {
+                                        "Ref": "VolumesEncryptionKey"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/xvdb",
+                        "Ebs": {
+                            "DeleteOnTermination": true,
+                            "Encrypted": true,
+                            "KmsKeyId": {
+                                "Fn::If": [
+                                    "HasEncryptionKey",
+                                    {
+                                        "Ref": "VolumesEncryptionKey"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            },
+                            "VolumeSize": 500,
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/xvdc",
+                        "Ebs": {
+                            "DeleteOnTermination": true,
+                            "Encrypted": true,
+                            "KmsKeyId": {
+                                "Fn::If": [
+                                    "HasEncryptionKey",
+                                    {
+                                        "Ref": "VolumesEncryptionKey"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            },
+                            "VolumeSize": 500,
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/xvdd",
+                        "Ebs": {
+                            "DeleteOnTermination": true,
+                            "Encrypted": true,
+                            "KmsKeyId": {
+                                "Fn::If": [
+                                    "HasEncryptionKey",
+                                    {
+                                        "Ref": "VolumesEncryptionKey"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            },
+                            "VolumeSize": 500,
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/xvde",
+                        "Ebs": {
+                            "DeleteOnTermination": true,
+                            "Encrypted": true,
+                            "KmsKeyId": {
+                                "Fn::If": [
+                                    "HasEncryptionKey",
+                                    {
+                                        "Ref": "VolumesEncryptionKey"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            },
+                            "VolumeSize": 500,
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/xvdf",
+                        "Ebs": {
+                            "DeleteOnTermination": true,
+                            "Encrypted": true,
+                            "KmsKeyId": {
+                                "Fn::If": [
+                                    "HasEncryptionKey",
+                                    {
+                                        "Ref": "VolumesEncryptionKey"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            },
+                            "VolumeSize": 500,
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/xvdg",
+                        "Ebs": {
+                            "DeleteOnTermination": true,
+                            "Encrypted": true,
+                            "KmsKeyId": {
+                                "Fn::If": [
+                                    "HasEncryptionKey",
+                                    {
+                                        "Ref": "VolumesEncryptionKey"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            },
+                            "VolumeSize": 500,
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/xvdh",
+                        "Ebs": {
+                            "DeleteOnTermination": true,
+                            "Encrypted": true,
+                            "KmsKeyId": {
+                                "Fn::If": [
+                                    "HasEncryptionKey",
+                                    {
+                                        "Ref": "VolumesEncryptionKey"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            },
+                            "VolumeSize": 500,
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/xvdi",
+                        "Ebs": {
+                            "DeleteOnTermination": true,
+                            "Encrypted": true,
+                            "KmsKeyId": {
+                                "Fn::If": [
+                                    "HasEncryptionKey",
+                                    {
+                                        "Ref": "VolumesEncryptionKey"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            },
+                            "VolumeSize": 500,
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/xvdj",
+                        "Ebs": {
+                            "DeleteOnTermination": true,
+                            "Encrypted": true,
+                            "KmsKeyId": {
+                                "Fn::If": [
+                                    "HasEncryptionKey",
+                                    {
+                                        "Ref": "VolumesEncryptionKey"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            },
+                            "VolumeSize": 500,
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/xvdk",
+                        "Ebs": {
+                            "DeleteOnTermination": true,
+                            "Encrypted": true,
+                            "KmsKeyId": {
+                                "Fn::If": [
+                                    "HasEncryptionKey",
+                                    {
+                                        "Ref": "VolumesEncryptionKey"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            },
+                            "VolumeSize": 500,
+                            "VolumeType": "gp2"
+                        }
+                    }
+                ],
+                "EbsOptimized": true,
+                "IamInstanceProfile": {
+                    "Fn::If": [
+                        "HasIamInstanceProfile",
+                        {
+                            "Ref": "IamInstanceProfile"
+                        },
+                        {
+                            "Ref": "AWS::NoValue"
+                        }
+                    ]
+                },
+                "ImageId": {
+                    "Ref": "ClusterAMI"
+                },
+                "InstanceType": {
+                    "Ref": "InstanceType"
+                },
+                "KeyName": {
+                    "Ref": "KeyName"
+                },
+                "NetworkInterfaces": [
+                    {
+                        "DeviceIndex": "0",
+                        "NetworkInterfaceId": {
+                            "Ref": "QumuloEni3"
+                        }
+                    }
+                ],
+                "PlacementGroupName": {
+                    "Ref": "QClusterGroup"
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Fn::Join": [
+                                " - ",
+                                [
+                                    {
+                                        "Ref": "AWS::StackName"
+                                    },
+                                    "QumuloNode3"
+                                ]
+                            ]
+                        }
+                    }
+                ],
+                "UserData": {
+                    "Fn::Base64": {
+                        "Fn::Join": [
+                            "",
+                            [
+                                "{",
+                                "\"spec_info\": ",
+                                "{",
+                                "    \"slot_specs\": [",
+                                "        {",
+                                "            \"drive_bay\": \"/dev/xvdb\",",
+                                "            \"disk_role\": \"working\",",
+                                "            \"disk_size\": 536870912000",
+                                "        },",
+                                "        {",
+                                "            \"drive_bay\": \"/dev/xvdc\",",
+                                "            \"disk_role\": \"working\",",
+                                "            \"disk_size\": 536870912000",
+                                "        },",
+                                "        {",
+                                "            \"drive_bay\": \"/dev/xvdd\",",
+                                "            \"disk_role\": \"working\",",
+                                "            \"disk_size\": 536870912000",
+                                "        },",
+                                "        {",
+                                "            \"drive_bay\": \"/dev/xvde\",",
+                                "            \"disk_role\": \"working\",",
+                                "            \"disk_size\": 536870912000",
+                                "        },",
+                                "        {",
+                                "            \"drive_bay\": \"/dev/xvdf\",",
+                                "            \"disk_role\": \"working\",",
+                                "            \"disk_size\": 536870912000",
+                                "        },",
+                                "        {",
+                                "            \"drive_bay\": \"/dev/xvdg\",",
+                                "            \"disk_role\": \"working\",",
+                                "            \"disk_size\": 536870912000",
+                                "        },",
+                                "        {",
+                                "            \"drive_bay\": \"/dev/xvdh\",",
+                                "            \"disk_role\": \"working\",",
+                                "            \"disk_size\": 536870912000",
+                                "        },",
+                                "        {",
+                                "            \"drive_bay\": \"/dev/xvdi\",",
+                                "            \"disk_role\": \"working\",",
+                                "            \"disk_size\": 536870912000",
+                                "        },",
+                                "        {",
+                                "            \"drive_bay\": \"/dev/xvdj\",",
+                                "            \"disk_role\": \"working\",",
+                                "            \"disk_size\": 536870912000",
+                                "        },",
+                                "        {",
+                                "            \"drive_bay\": \"/dev/xvdk\",",
+                                "            \"disk_role\": \"working\",",
+                                "            \"disk_size\": 536870912000",
+                                "        }",
+                                "    ]",
+                                "}",
+                                "}"
+                            ]
+                        ]
+                    }
+                }
+            },
+            "Type": "AWS::EC2::Instance"
+        },
+        "QumuloNode4": {
+            "Properties": {
+                "BlockDeviceMappings": [
+                    {
+                        "DeviceName": "/dev/sda1",
+                        "Ebs": {
+                            "Encrypted": true,
+                            "KmsKeyId": {
+                                "Fn::If": [
+                                    "HasEncryptionKey",
+                                    {
+                                        "Ref": "VolumesEncryptionKey"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/xvdb",
+                        "Ebs": {
+                            "DeleteOnTermination": true,
+                            "Encrypted": true,
+                            "KmsKeyId": {
+                                "Fn::If": [
+                                    "HasEncryptionKey",
+                                    {
+                                        "Ref": "VolumesEncryptionKey"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            },
+                            "VolumeSize": 500,
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/xvdc",
+                        "Ebs": {
+                            "DeleteOnTermination": true,
+                            "Encrypted": true,
+                            "KmsKeyId": {
+                                "Fn::If": [
+                                    "HasEncryptionKey",
+                                    {
+                                        "Ref": "VolumesEncryptionKey"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            },
+                            "VolumeSize": 500,
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/xvdd",
+                        "Ebs": {
+                            "DeleteOnTermination": true,
+                            "Encrypted": true,
+                            "KmsKeyId": {
+                                "Fn::If": [
+                                    "HasEncryptionKey",
+                                    {
+                                        "Ref": "VolumesEncryptionKey"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            },
+                            "VolumeSize": 500,
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/xvde",
+                        "Ebs": {
+                            "DeleteOnTermination": true,
+                            "Encrypted": true,
+                            "KmsKeyId": {
+                                "Fn::If": [
+                                    "HasEncryptionKey",
+                                    {
+                                        "Ref": "VolumesEncryptionKey"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            },
+                            "VolumeSize": 500,
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/xvdf",
+                        "Ebs": {
+                            "DeleteOnTermination": true,
+                            "Encrypted": true,
+                            "KmsKeyId": {
+                                "Fn::If": [
+                                    "HasEncryptionKey",
+                                    {
+                                        "Ref": "VolumesEncryptionKey"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            },
+                            "VolumeSize": 500,
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/xvdg",
+                        "Ebs": {
+                            "DeleteOnTermination": true,
+                            "Encrypted": true,
+                            "KmsKeyId": {
+                                "Fn::If": [
+                                    "HasEncryptionKey",
+                                    {
+                                        "Ref": "VolumesEncryptionKey"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            },
+                            "VolumeSize": 500,
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/xvdh",
+                        "Ebs": {
+                            "DeleteOnTermination": true,
+                            "Encrypted": true,
+                            "KmsKeyId": {
+                                "Fn::If": [
+                                    "HasEncryptionKey",
+                                    {
+                                        "Ref": "VolumesEncryptionKey"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            },
+                            "VolumeSize": 500,
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/xvdi",
+                        "Ebs": {
+                            "DeleteOnTermination": true,
+                            "Encrypted": true,
+                            "KmsKeyId": {
+                                "Fn::If": [
+                                    "HasEncryptionKey",
+                                    {
+                                        "Ref": "VolumesEncryptionKey"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            },
+                            "VolumeSize": 500,
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/xvdj",
+                        "Ebs": {
+                            "DeleteOnTermination": true,
+                            "Encrypted": true,
+                            "KmsKeyId": {
+                                "Fn::If": [
+                                    "HasEncryptionKey",
+                                    {
+                                        "Ref": "VolumesEncryptionKey"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            },
+                            "VolumeSize": 500,
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/xvdk",
+                        "Ebs": {
+                            "DeleteOnTermination": true,
+                            "Encrypted": true,
+                            "KmsKeyId": {
+                                "Fn::If": [
+                                    "HasEncryptionKey",
+                                    {
+                                        "Ref": "VolumesEncryptionKey"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            },
+                            "VolumeSize": 500,
+                            "VolumeType": "gp2"
+                        }
+                    }
+                ],
+                "EbsOptimized": true,
+                "IamInstanceProfile": {
+                    "Fn::If": [
+                        "HasIamInstanceProfile",
+                        {
+                            "Ref": "IamInstanceProfile"
+                        },
+                        {
+                            "Ref": "AWS::NoValue"
+                        }
+                    ]
+                },
+                "ImageId": {
+                    "Ref": "ClusterAMI"
+                },
+                "InstanceType": {
+                    "Ref": "InstanceType"
+                },
+                "KeyName": {
+                    "Ref": "KeyName"
+                },
+                "NetworkInterfaces": [
+                    {
+                        "DeviceIndex": "0",
+                        "NetworkInterfaceId": {
+                            "Ref": "QumuloEni4"
+                        }
+                    }
+                ],
+                "PlacementGroupName": {
+                    "Ref": "QClusterGroup"
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Fn::Join": [
+                                " - ",
+                                [
+                                    {
+                                        "Ref": "AWS::StackName"
+                                    },
+                                    "QumuloNode4"
+                                ]
+                            ]
+                        }
+                    }
+                ],
+                "UserData": {
+                    "Fn::Base64": {
+                        "Fn::Join": [
+                            "",
+                            [
+                                "{",
+                                "\"spec_info\": ",
+                                "{",
+                                "    \"slot_specs\": [",
+                                "        {",
+                                "            \"drive_bay\": \"/dev/xvdb\",",
+                                "            \"disk_role\": \"working\",",
+                                "            \"disk_size\": 536870912000",
+                                "        },",
+                                "        {",
+                                "            \"drive_bay\": \"/dev/xvdc\",",
+                                "            \"disk_role\": \"working\",",
+                                "            \"disk_size\": 536870912000",
+                                "        },",
+                                "        {",
+                                "            \"drive_bay\": \"/dev/xvdd\",",
+                                "            \"disk_role\": \"working\",",
+                                "            \"disk_size\": 536870912000",
+                                "        },",
+                                "        {",
+                                "            \"drive_bay\": \"/dev/xvde\",",
+                                "            \"disk_role\": \"working\",",
+                                "            \"disk_size\": 536870912000",
+                                "        },",
+                                "        {",
+                                "            \"drive_bay\": \"/dev/xvdf\",",
+                                "            \"disk_role\": \"working\",",
+                                "            \"disk_size\": 536870912000",
+                                "        },",
+                                "        {",
+                                "            \"drive_bay\": \"/dev/xvdg\",",
+                                "            \"disk_role\": \"working\",",
+                                "            \"disk_size\": 536870912000",
+                                "        },",
+                                "        {",
+                                "            \"drive_bay\": \"/dev/xvdh\",",
+                                "            \"disk_role\": \"working\",",
+                                "            \"disk_size\": 536870912000",
+                                "        },",
+                                "        {",
+                                "            \"drive_bay\": \"/dev/xvdi\",",
+                                "            \"disk_role\": \"working\",",
+                                "            \"disk_size\": 536870912000",
+                                "        },",
+                                "        {",
+                                "            \"drive_bay\": \"/dev/xvdj\",",
+                                "            \"disk_role\": \"working\",",
+                                "            \"disk_size\": 536870912000",
+                                "        },",
+                                "        {",
+                                "            \"drive_bay\": \"/dev/xvdk\",",
+                                "            \"disk_role\": \"working\",",
+                                "            \"disk_size\": 536870912000",
+                                "        }",
+                                "    ]",
+                                "}",
+                                "}"
+                            ]
+                        ]
+                    }
+                }
+            },
+            "Type": "AWS::EC2::Instance"
+        },
+        "QumuloNode5": {
+            "Properties": {
+                "BlockDeviceMappings": [
+                    {
+                        "DeviceName": "/dev/sda1",
+                        "Ebs": {
+                            "Encrypted": true,
+                            "KmsKeyId": {
+                                "Fn::If": [
+                                    "HasEncryptionKey",
+                                    {
+                                        "Ref": "VolumesEncryptionKey"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/xvdb",
+                        "Ebs": {
+                            "DeleteOnTermination": true,
+                            "Encrypted": true,
+                            "KmsKeyId": {
+                                "Fn::If": [
+                                    "HasEncryptionKey",
+                                    {
+                                        "Ref": "VolumesEncryptionKey"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            },
+                            "VolumeSize": 500,
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/xvdc",
+                        "Ebs": {
+                            "DeleteOnTermination": true,
+                            "Encrypted": true,
+                            "KmsKeyId": {
+                                "Fn::If": [
+                                    "HasEncryptionKey",
+                                    {
+                                        "Ref": "VolumesEncryptionKey"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            },
+                            "VolumeSize": 500,
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/xvdd",
+                        "Ebs": {
+                            "DeleteOnTermination": true,
+                            "Encrypted": true,
+                            "KmsKeyId": {
+                                "Fn::If": [
+                                    "HasEncryptionKey",
+                                    {
+                                        "Ref": "VolumesEncryptionKey"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            },
+                            "VolumeSize": 500,
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/xvde",
+                        "Ebs": {
+                            "DeleteOnTermination": true,
+                            "Encrypted": true,
+                            "KmsKeyId": {
+                                "Fn::If": [
+                                    "HasEncryptionKey",
+                                    {
+                                        "Ref": "VolumesEncryptionKey"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            },
+                            "VolumeSize": 500,
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/xvdf",
+                        "Ebs": {
+                            "DeleteOnTermination": true,
+                            "Encrypted": true,
+                            "KmsKeyId": {
+                                "Fn::If": [
+                                    "HasEncryptionKey",
+                                    {
+                                        "Ref": "VolumesEncryptionKey"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            },
+                            "VolumeSize": 500,
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/xvdg",
+                        "Ebs": {
+                            "DeleteOnTermination": true,
+                            "Encrypted": true,
+                            "KmsKeyId": {
+                                "Fn::If": [
+                                    "HasEncryptionKey",
+                                    {
+                                        "Ref": "VolumesEncryptionKey"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            },
+                            "VolumeSize": 500,
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/xvdh",
+                        "Ebs": {
+                            "DeleteOnTermination": true,
+                            "Encrypted": true,
+                            "KmsKeyId": {
+                                "Fn::If": [
+                                    "HasEncryptionKey",
+                                    {
+                                        "Ref": "VolumesEncryptionKey"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            },
+                            "VolumeSize": 500,
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/xvdi",
+                        "Ebs": {
+                            "DeleteOnTermination": true,
+                            "Encrypted": true,
+                            "KmsKeyId": {
+                                "Fn::If": [
+                                    "HasEncryptionKey",
+                                    {
+                                        "Ref": "VolumesEncryptionKey"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            },
+                            "VolumeSize": 500,
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/xvdj",
+                        "Ebs": {
+                            "DeleteOnTermination": true,
+                            "Encrypted": true,
+                            "KmsKeyId": {
+                                "Fn::If": [
+                                    "HasEncryptionKey",
+                                    {
+                                        "Ref": "VolumesEncryptionKey"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            },
+                            "VolumeSize": 500,
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/xvdk",
+                        "Ebs": {
+                            "DeleteOnTermination": true,
+                            "Encrypted": true,
+                            "KmsKeyId": {
+                                "Fn::If": [
+                                    "HasEncryptionKey",
+                                    {
+                                        "Ref": "VolumesEncryptionKey"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            },
+                            "VolumeSize": 500,
+                            "VolumeType": "gp2"
+                        }
+                    }
+                ],
+                "EbsOptimized": true,
+                "IamInstanceProfile": {
+                    "Fn::If": [
+                        "HasIamInstanceProfile",
+                        {
+                            "Ref": "IamInstanceProfile"
+                        },
+                        {
+                            "Ref": "AWS::NoValue"
+                        }
+                    ]
+                },
+                "ImageId": {
+                    "Ref": "ClusterAMI"
+                },
+                "InstanceType": {
+                    "Ref": "InstanceType"
+                },
+                "KeyName": {
+                    "Ref": "KeyName"
+                },
+                "NetworkInterfaces": [
+                    {
+                        "DeviceIndex": "0",
+                        "NetworkInterfaceId": {
+                            "Ref": "QumuloEni5"
+                        }
+                    }
+                ],
+                "PlacementGroupName": {
+                    "Ref": "QClusterGroup"
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Fn::Join": [
+                                " - ",
+                                [
+                                    {
+                                        "Ref": "AWS::StackName"
+                                    },
+                                    "QumuloNode5"
+                                ]
+                            ]
+                        }
+                    }
+                ],
+                "UserData": {
+                    "Fn::Base64": {
+                        "Fn::Join": [
+                            "",
+                            [
+                                "{",
+                                "\"spec_info\": ",
+                                "{",
+                                "    \"slot_specs\": [",
+                                "        {",
+                                "            \"drive_bay\": \"/dev/xvdb\",",
+                                "            \"disk_role\": \"working\",",
+                                "            \"disk_size\": 536870912000",
+                                "        },",
+                                "        {",
+                                "            \"drive_bay\": \"/dev/xvdc\",",
+                                "            \"disk_role\": \"working\",",
+                                "            \"disk_size\": 536870912000",
+                                "        },",
+                                "        {",
+                                "            \"drive_bay\": \"/dev/xvdd\",",
+                                "            \"disk_role\": \"working\",",
+                                "            \"disk_size\": 536870912000",
+                                "        },",
+                                "        {",
+                                "            \"drive_bay\": \"/dev/xvde\",",
+                                "            \"disk_role\": \"working\",",
+                                "            \"disk_size\": 536870912000",
+                                "        },",
+                                "        {",
+                                "            \"drive_bay\": \"/dev/xvdf\",",
+                                "            \"disk_role\": \"working\",",
+                                "            \"disk_size\": 536870912000",
+                                "        },",
+                                "        {",
+                                "            \"drive_bay\": \"/dev/xvdg\",",
+                                "            \"disk_role\": \"working\",",
+                                "            \"disk_size\": 536870912000",
+                                "        },",
+                                "        {",
+                                "            \"drive_bay\": \"/dev/xvdh\",",
+                                "            \"disk_role\": \"working\",",
+                                "            \"disk_size\": 536870912000",
+                                "        },",
+                                "        {",
+                                "            \"drive_bay\": \"/dev/xvdi\",",
+                                "            \"disk_role\": \"working\",",
+                                "            \"disk_size\": 536870912000",
+                                "        },",
+                                "        {",
+                                "            \"drive_bay\": \"/dev/xvdj\",",
+                                "            \"disk_role\": \"working\",",
+                                "            \"disk_size\": 536870912000",
+                                "        },",
+                                "        {",
+                                "            \"drive_bay\": \"/dev/xvdk\",",
+                                "            \"disk_role\": \"working\",",
+                                "            \"disk_size\": 536870912000",
+                                "        }",
+                                "    ]",
+                                "}",
+                                "}"
+                            ]
+                        ]
+                    }
+                }
+            },
+            "Type": "AWS::EC2::Instance"
+        },
+        "QumuloNode6": {
+            "Properties": {
+                "BlockDeviceMappings": [
+                    {
+                        "DeviceName": "/dev/sda1",
+                        "Ebs": {
+                            "Encrypted": true,
+                            "KmsKeyId": {
+                                "Fn::If": [
+                                    "HasEncryptionKey",
+                                    {
+                                        "Ref": "VolumesEncryptionKey"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/xvdb",
+                        "Ebs": {
+                            "DeleteOnTermination": true,
+                            "Encrypted": true,
+                            "KmsKeyId": {
+                                "Fn::If": [
+                                    "HasEncryptionKey",
+                                    {
+                                        "Ref": "VolumesEncryptionKey"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            },
+                            "VolumeSize": 500,
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/xvdc",
+                        "Ebs": {
+                            "DeleteOnTermination": true,
+                            "Encrypted": true,
+                            "KmsKeyId": {
+                                "Fn::If": [
+                                    "HasEncryptionKey",
+                                    {
+                                        "Ref": "VolumesEncryptionKey"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            },
+                            "VolumeSize": 500,
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/xvdd",
+                        "Ebs": {
+                            "DeleteOnTermination": true,
+                            "Encrypted": true,
+                            "KmsKeyId": {
+                                "Fn::If": [
+                                    "HasEncryptionKey",
+                                    {
+                                        "Ref": "VolumesEncryptionKey"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            },
+                            "VolumeSize": 500,
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/xvde",
+                        "Ebs": {
+                            "DeleteOnTermination": true,
+                            "Encrypted": true,
+                            "KmsKeyId": {
+                                "Fn::If": [
+                                    "HasEncryptionKey",
+                                    {
+                                        "Ref": "VolumesEncryptionKey"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            },
+                            "VolumeSize": 500,
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/xvdf",
+                        "Ebs": {
+                            "DeleteOnTermination": true,
+                            "Encrypted": true,
+                            "KmsKeyId": {
+                                "Fn::If": [
+                                    "HasEncryptionKey",
+                                    {
+                                        "Ref": "VolumesEncryptionKey"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            },
+                            "VolumeSize": 500,
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/xvdg",
+                        "Ebs": {
+                            "DeleteOnTermination": true,
+                            "Encrypted": true,
+                            "KmsKeyId": {
+                                "Fn::If": [
+                                    "HasEncryptionKey",
+                                    {
+                                        "Ref": "VolumesEncryptionKey"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            },
+                            "VolumeSize": 500,
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/xvdh",
+                        "Ebs": {
+                            "DeleteOnTermination": true,
+                            "Encrypted": true,
+                            "KmsKeyId": {
+                                "Fn::If": [
+                                    "HasEncryptionKey",
+                                    {
+                                        "Ref": "VolumesEncryptionKey"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            },
+                            "VolumeSize": 500,
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/xvdi",
+                        "Ebs": {
+                            "DeleteOnTermination": true,
+                            "Encrypted": true,
+                            "KmsKeyId": {
+                                "Fn::If": [
+                                    "HasEncryptionKey",
+                                    {
+                                        "Ref": "VolumesEncryptionKey"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            },
+                            "VolumeSize": 500,
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/xvdj",
+                        "Ebs": {
+                            "DeleteOnTermination": true,
+                            "Encrypted": true,
+                            "KmsKeyId": {
+                                "Fn::If": [
+                                    "HasEncryptionKey",
+                                    {
+                                        "Ref": "VolumesEncryptionKey"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            },
+                            "VolumeSize": 500,
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/xvdk",
+                        "Ebs": {
+                            "DeleteOnTermination": true,
+                            "Encrypted": true,
+                            "KmsKeyId": {
+                                "Fn::If": [
+                                    "HasEncryptionKey",
+                                    {
+                                        "Ref": "VolumesEncryptionKey"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            },
+                            "VolumeSize": 500,
+                            "VolumeType": "gp2"
+                        }
+                    }
+                ],
+                "EbsOptimized": true,
+                "IamInstanceProfile": {
+                    "Fn::If": [
+                        "HasIamInstanceProfile",
+                        {
+                            "Ref": "IamInstanceProfile"
+                        },
+                        {
+                            "Ref": "AWS::NoValue"
+                        }
+                    ]
+                },
+                "ImageId": {
+                    "Ref": "ClusterAMI"
+                },
+                "InstanceType": {
+                    "Ref": "InstanceType"
+                },
+                "KeyName": {
+                    "Ref": "KeyName"
+                },
+                "NetworkInterfaces": [
+                    {
+                        "DeviceIndex": "0",
+                        "NetworkInterfaceId": {
+                            "Ref": "QumuloEni6"
+                        }
+                    }
+                ],
+                "PlacementGroupName": {
+                    "Ref": "QClusterGroup"
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Fn::Join": [
+                                " - ",
+                                [
+                                    {
+                                        "Ref": "AWS::StackName"
+                                    },
+                                    "QumuloNode6"
+                                ]
+                            ]
+                        }
+                    }
+                ],
+                "UserData": {
+                    "Fn::Base64": {
+                        "Fn::Join": [
+                            "",
+                            [
+                                "{",
+                                "\"spec_info\": ",
+                                "{",
+                                "    \"slot_specs\": [",
+                                "        {",
+                                "            \"drive_bay\": \"/dev/xvdb\",",
+                                "            \"disk_role\": \"working\",",
+                                "            \"disk_size\": 536870912000",
+                                "        },",
+                                "        {",
+                                "            \"drive_bay\": \"/dev/xvdc\",",
+                                "            \"disk_role\": \"working\",",
+                                "            \"disk_size\": 536870912000",
+                                "        },",
+                                "        {",
+                                "            \"drive_bay\": \"/dev/xvdd\",",
+                                "            \"disk_role\": \"working\",",
+                                "            \"disk_size\": 536870912000",
+                                "        },",
+                                "        {",
+                                "            \"drive_bay\": \"/dev/xvde\",",
+                                "            \"disk_role\": \"working\",",
+                                "            \"disk_size\": 536870912000",
+                                "        },",
+                                "        {",
+                                "            \"drive_bay\": \"/dev/xvdf\",",
+                                "            \"disk_role\": \"working\",",
+                                "            \"disk_size\": 536870912000",
+                                "        },",
+                                "        {",
+                                "            \"drive_bay\": \"/dev/xvdg\",",
+                                "            \"disk_role\": \"working\",",
+                                "            \"disk_size\": 536870912000",
+                                "        },",
+                                "        {",
+                                "            \"drive_bay\": \"/dev/xvdh\",",
+                                "            \"disk_role\": \"working\",",
+                                "            \"disk_size\": 536870912000",
+                                "        },",
+                                "        {",
+                                "            \"drive_bay\": \"/dev/xvdi\",",
+                                "            \"disk_role\": \"working\",",
+                                "            \"disk_size\": 536870912000",
+                                "        },",
+                                "        {",
+                                "            \"drive_bay\": \"/dev/xvdj\",",
+                                "            \"disk_role\": \"working\",",
+                                "            \"disk_size\": 536870912000",
+                                "        },",
+                                "        {",
+                                "            \"drive_bay\": \"/dev/xvdk\",",
+                                "            \"disk_role\": \"working\",",
+                                "            \"disk_size\": 536870912000",
+                                "        }",
+                                "    ]",
+                                "}",
+                                "}"
+                            ]
+                        ]
+                    }
+                }
+            },
+            "Type": "AWS::EC2::Instance"
+        },
+        "QumuloNode7": {
+            "Properties": {
+                "BlockDeviceMappings": [
+                    {
+                        "DeviceName": "/dev/sda1",
+                        "Ebs": {
+                            "Encrypted": true,
+                            "KmsKeyId": {
+                                "Fn::If": [
+                                    "HasEncryptionKey",
+                                    {
+                                        "Ref": "VolumesEncryptionKey"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/xvdb",
+                        "Ebs": {
+                            "DeleteOnTermination": true,
+                            "Encrypted": true,
+                            "KmsKeyId": {
+                                "Fn::If": [
+                                    "HasEncryptionKey",
+                                    {
+                                        "Ref": "VolumesEncryptionKey"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            },
+                            "VolumeSize": 500,
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/xvdc",
+                        "Ebs": {
+                            "DeleteOnTermination": true,
+                            "Encrypted": true,
+                            "KmsKeyId": {
+                                "Fn::If": [
+                                    "HasEncryptionKey",
+                                    {
+                                        "Ref": "VolumesEncryptionKey"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            },
+                            "VolumeSize": 500,
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/xvdd",
+                        "Ebs": {
+                            "DeleteOnTermination": true,
+                            "Encrypted": true,
+                            "KmsKeyId": {
+                                "Fn::If": [
+                                    "HasEncryptionKey",
+                                    {
+                                        "Ref": "VolumesEncryptionKey"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            },
+                            "VolumeSize": 500,
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/xvde",
+                        "Ebs": {
+                            "DeleteOnTermination": true,
+                            "Encrypted": true,
+                            "KmsKeyId": {
+                                "Fn::If": [
+                                    "HasEncryptionKey",
+                                    {
+                                        "Ref": "VolumesEncryptionKey"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            },
+                            "VolumeSize": 500,
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/xvdf",
+                        "Ebs": {
+                            "DeleteOnTermination": true,
+                            "Encrypted": true,
+                            "KmsKeyId": {
+                                "Fn::If": [
+                                    "HasEncryptionKey",
+                                    {
+                                        "Ref": "VolumesEncryptionKey"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            },
+                            "VolumeSize": 500,
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/xvdg",
+                        "Ebs": {
+                            "DeleteOnTermination": true,
+                            "Encrypted": true,
+                            "KmsKeyId": {
+                                "Fn::If": [
+                                    "HasEncryptionKey",
+                                    {
+                                        "Ref": "VolumesEncryptionKey"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            },
+                            "VolumeSize": 500,
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/xvdh",
+                        "Ebs": {
+                            "DeleteOnTermination": true,
+                            "Encrypted": true,
+                            "KmsKeyId": {
+                                "Fn::If": [
+                                    "HasEncryptionKey",
+                                    {
+                                        "Ref": "VolumesEncryptionKey"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            },
+                            "VolumeSize": 500,
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/xvdi",
+                        "Ebs": {
+                            "DeleteOnTermination": true,
+                            "Encrypted": true,
+                            "KmsKeyId": {
+                                "Fn::If": [
+                                    "HasEncryptionKey",
+                                    {
+                                        "Ref": "VolumesEncryptionKey"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            },
+                            "VolumeSize": 500,
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/xvdj",
+                        "Ebs": {
+                            "DeleteOnTermination": true,
+                            "Encrypted": true,
+                            "KmsKeyId": {
+                                "Fn::If": [
+                                    "HasEncryptionKey",
+                                    {
+                                        "Ref": "VolumesEncryptionKey"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            },
+                            "VolumeSize": 500,
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/xvdk",
+                        "Ebs": {
+                            "DeleteOnTermination": true,
+                            "Encrypted": true,
+                            "KmsKeyId": {
+                                "Fn::If": [
+                                    "HasEncryptionKey",
+                                    {
+                                        "Ref": "VolumesEncryptionKey"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            },
+                            "VolumeSize": 500,
+                            "VolumeType": "gp2"
+                        }
+                    }
+                ],
+                "EbsOptimized": true,
+                "IamInstanceProfile": {
+                    "Fn::If": [
+                        "HasIamInstanceProfile",
+                        {
+                            "Ref": "IamInstanceProfile"
+                        },
+                        {
+                            "Ref": "AWS::NoValue"
+                        }
+                    ]
+                },
+                "ImageId": {
+                    "Ref": "ClusterAMI"
+                },
+                "InstanceType": {
+                    "Ref": "InstanceType"
+                },
+                "KeyName": {
+                    "Ref": "KeyName"
+                },
+                "NetworkInterfaces": [
+                    {
+                        "DeviceIndex": "0",
+                        "NetworkInterfaceId": {
+                            "Ref": "QumuloEni7"
+                        }
+                    }
+                ],
+                "PlacementGroupName": {
+                    "Ref": "QClusterGroup"
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Fn::Join": [
+                                " - ",
+                                [
+                                    {
+                                        "Ref": "AWS::StackName"
+                                    },
+                                    "QumuloNode7"
+                                ]
+                            ]
+                        }
+                    }
+                ],
+                "UserData": {
+                    "Fn::Base64": {
+                        "Fn::Join": [
+                            "",
+                            [
+                                "{",
+                                "\"spec_info\": ",
+                                "{",
+                                "    \"slot_specs\": [",
+                                "        {",
+                                "            \"drive_bay\": \"/dev/xvdb\",",
+                                "            \"disk_role\": \"working\",",
+                                "            \"disk_size\": 536870912000",
+                                "        },",
+                                "        {",
+                                "            \"drive_bay\": \"/dev/xvdc\",",
+                                "            \"disk_role\": \"working\",",
+                                "            \"disk_size\": 536870912000",
+                                "        },",
+                                "        {",
+                                "            \"drive_bay\": \"/dev/xvdd\",",
+                                "            \"disk_role\": \"working\",",
+                                "            \"disk_size\": 536870912000",
+                                "        },",
+                                "        {",
+                                "            \"drive_bay\": \"/dev/xvde\",",
+                                "            \"disk_role\": \"working\",",
+                                "            \"disk_size\": 536870912000",
+                                "        },",
+                                "        {",
+                                "            \"drive_bay\": \"/dev/xvdf\",",
+                                "            \"disk_role\": \"working\",",
+                                "            \"disk_size\": 536870912000",
+                                "        },",
+                                "        {",
+                                "            \"drive_bay\": \"/dev/xvdg\",",
+                                "            \"disk_role\": \"working\",",
+                                "            \"disk_size\": 536870912000",
+                                "        },",
+                                "        {",
+                                "            \"drive_bay\": \"/dev/xvdh\",",
+                                "            \"disk_role\": \"working\",",
+                                "            \"disk_size\": 536870912000",
+                                "        },",
+                                "        {",
+                                "            \"drive_bay\": \"/dev/xvdi\",",
+                                "            \"disk_role\": \"working\",",
+                                "            \"disk_size\": 536870912000",
+                                "        },",
+                                "        {",
+                                "            \"drive_bay\": \"/dev/xvdj\",",
+                                "            \"disk_role\": \"working\",",
+                                "            \"disk_size\": 536870912000",
+                                "        },",
+                                "        {",
+                                "            \"drive_bay\": \"/dev/xvdk\",",
+                                "            \"disk_role\": \"working\",",
+                                "            \"disk_size\": 536870912000",
+                                "        }",
+                                "    ]",
+                                "}",
+                                "}"
+                            ]
+                        ]
+                    }
+                }
+            },
+            "Type": "AWS::EC2::Instance"
+        },
+        "QumuloNode8": {
+            "Properties": {
+                "BlockDeviceMappings": [
+                    {
+                        "DeviceName": "/dev/sda1",
+                        "Ebs": {
+                            "Encrypted": true,
+                            "KmsKeyId": {
+                                "Fn::If": [
+                                    "HasEncryptionKey",
+                                    {
+                                        "Ref": "VolumesEncryptionKey"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/xvdb",
+                        "Ebs": {
+                            "DeleteOnTermination": true,
+                            "Encrypted": true,
+                            "KmsKeyId": {
+                                "Fn::If": [
+                                    "HasEncryptionKey",
+                                    {
+                                        "Ref": "VolumesEncryptionKey"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            },
+                            "VolumeSize": 500,
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/xvdc",
+                        "Ebs": {
+                            "DeleteOnTermination": true,
+                            "Encrypted": true,
+                            "KmsKeyId": {
+                                "Fn::If": [
+                                    "HasEncryptionKey",
+                                    {
+                                        "Ref": "VolumesEncryptionKey"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            },
+                            "VolumeSize": 500,
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/xvdd",
+                        "Ebs": {
+                            "DeleteOnTermination": true,
+                            "Encrypted": true,
+                            "KmsKeyId": {
+                                "Fn::If": [
+                                    "HasEncryptionKey",
+                                    {
+                                        "Ref": "VolumesEncryptionKey"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            },
+                            "VolumeSize": 500,
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/xvde",
+                        "Ebs": {
+                            "DeleteOnTermination": true,
+                            "Encrypted": true,
+                            "KmsKeyId": {
+                                "Fn::If": [
+                                    "HasEncryptionKey",
+                                    {
+                                        "Ref": "VolumesEncryptionKey"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            },
+                            "VolumeSize": 500,
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/xvdf",
+                        "Ebs": {
+                            "DeleteOnTermination": true,
+                            "Encrypted": true,
+                            "KmsKeyId": {
+                                "Fn::If": [
+                                    "HasEncryptionKey",
+                                    {
+                                        "Ref": "VolumesEncryptionKey"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            },
+                            "VolumeSize": 500,
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/xvdg",
+                        "Ebs": {
+                            "DeleteOnTermination": true,
+                            "Encrypted": true,
+                            "KmsKeyId": {
+                                "Fn::If": [
+                                    "HasEncryptionKey",
+                                    {
+                                        "Ref": "VolumesEncryptionKey"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            },
+                            "VolumeSize": 500,
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/xvdh",
+                        "Ebs": {
+                            "DeleteOnTermination": true,
+                            "Encrypted": true,
+                            "KmsKeyId": {
+                                "Fn::If": [
+                                    "HasEncryptionKey",
+                                    {
+                                        "Ref": "VolumesEncryptionKey"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            },
+                            "VolumeSize": 500,
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/xvdi",
+                        "Ebs": {
+                            "DeleteOnTermination": true,
+                            "Encrypted": true,
+                            "KmsKeyId": {
+                                "Fn::If": [
+                                    "HasEncryptionKey",
+                                    {
+                                        "Ref": "VolumesEncryptionKey"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            },
+                            "VolumeSize": 500,
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/xvdj",
+                        "Ebs": {
+                            "DeleteOnTermination": true,
+                            "Encrypted": true,
+                            "KmsKeyId": {
+                                "Fn::If": [
+                                    "HasEncryptionKey",
+                                    {
+                                        "Ref": "VolumesEncryptionKey"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            },
+                            "VolumeSize": 500,
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/xvdk",
+                        "Ebs": {
+                            "DeleteOnTermination": true,
+                            "Encrypted": true,
+                            "KmsKeyId": {
+                                "Fn::If": [
+                                    "HasEncryptionKey",
+                                    {
+                                        "Ref": "VolumesEncryptionKey"
+                                    },
+                                    {
+                                        "Ref": "AWS::NoValue"
+                                    }
+                                ]
+                            },
+                            "VolumeSize": 500,
+                            "VolumeType": "gp2"
+                        }
+                    }
+                ],
+                "EbsOptimized": true,
+                "IamInstanceProfile": {
+                    "Fn::If": [
+                        "HasIamInstanceProfile",
+                        {
+                            "Ref": "IamInstanceProfile"
+                        },
+                        {
+                            "Ref": "AWS::NoValue"
+                        }
+                    ]
+                },
+                "ImageId": {
+                    "Ref": "ClusterAMI"
+                },
+                "InstanceType": {
+                    "Ref": "InstanceType"
+                },
+                "KeyName": {
+                    "Ref": "KeyName"
+                },
+                "NetworkInterfaces": [
+                    {
+                        "DeviceIndex": "0",
+                        "NetworkInterfaceId": {
+                            "Ref": "QumuloEni8"
+                        }
+                    }
+                ],
+                "PlacementGroupName": {
+                    "Ref": "QClusterGroup"
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Fn::Join": [
+                                " - ",
+                                [
+                                    {
+                                        "Ref": "AWS::StackName"
+                                    },
+                                    "QumuloNode8"
+                                ]
+                            ]
+                        }
+                    }
+                ],
+                "UserData": {
+                    "Fn::Base64": {
+                        "Fn::Join": [
+                            "",
+                            [
+                                "{",
+                                "\"spec_info\": ",
+                                "{",
+                                "    \"slot_specs\": [",
+                                "        {",
+                                "            \"drive_bay\": \"/dev/xvdb\",",
+                                "            \"disk_role\": \"working\",",
+                                "            \"disk_size\": 536870912000",
+                                "        },",
+                                "        {",
+                                "            \"drive_bay\": \"/dev/xvdc\",",
+                                "            \"disk_role\": \"working\",",
+                                "            \"disk_size\": 536870912000",
+                                "        },",
+                                "        {",
+                                "            \"drive_bay\": \"/dev/xvdd\",",
+                                "            \"disk_role\": \"working\",",
+                                "            \"disk_size\": 536870912000",
+                                "        },",
+                                "        {",
+                                "            \"drive_bay\": \"/dev/xvde\",",
+                                "            \"disk_role\": \"working\",",
+                                "            \"disk_size\": 536870912000",
+                                "        },",
+                                "        {",
+                                "            \"drive_bay\": \"/dev/xvdf\",",
+                                "            \"disk_role\": \"working\",",
+                                "            \"disk_size\": 536870912000",
+                                "        },",
+                                "        {",
+                                "            \"drive_bay\": \"/dev/xvdg\",",
+                                "            \"disk_role\": \"working\",",
+                                "            \"disk_size\": 536870912000",
+                                "        },",
+                                "        {",
+                                "            \"drive_bay\": \"/dev/xvdh\",",
+                                "            \"disk_role\": \"working\",",
+                                "            \"disk_size\": 536870912000",
+                                "        },",
+                                "        {",
+                                "            \"drive_bay\": \"/dev/xvdi\",",
+                                "            \"disk_role\": \"working\",",
+                                "            \"disk_size\": 536870912000",
+                                "        },",
+                                "        {",
+                                "            \"drive_bay\": \"/dev/xvdj\",",
+                                "            \"disk_role\": \"working\",",
+                                "            \"disk_size\": 536870912000",
+                                "        },",
+                                "        {",
+                                "            \"drive_bay\": \"/dev/xvdk\",",
+                                "            \"disk_role\": \"working\",",
+                                "            \"disk_size\": 536870912000",
+                                "        }",
+                                "    ]",
+                                "}",
+                                "}"
+                            ]
+                        ]
+                    }
+                }
+            },
+            "Type": "AWS::EC2::Instance"
+        },
+        "QumuloSecurityGroup": {
+            "Properties": {
+                "GroupDescription": "Enable ports for NFS/SMB/FTP/SSH, Management, Replication, and Clustering.",
+                "SecurityGroupEgress": [
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "Description": "Outbound traffic",
+                        "FromPort": 0,
+                        "IpProtocol": "-1",
+                        "ToPort": 0
+                    }
+                ],
+                "SecurityGroupIngress": [
+                    {
+                        "CidrIp": {
+                            "Ref": "SgCidr"
+                        },
+                        "Description": "TCP ports for FTP",
+                        "FromPort": 21,
+                        "IpProtocol": "tcp",
+                        "ToPort": 21
+                    },
+                    {
+                        "CidrIp": {
+                            "Ref": "SgCidr"
+                        },
+                        "Description": "TCP ports for SSH",
+                        "FromPort": 22,
+                        "IpProtocol": "tcp",
+                        "ToPort": 22
+                    },
+                    {
+                        "CidrIp": {
+                            "Ref": "SgCidr"
+                        },
+                        "Description": "TCP ports for HTTP",
+                        "FromPort": 80,
+                        "IpProtocol": "tcp",
+                        "ToPort": 80
+                    },
+                    {
+                        "CidrIp": {
+                            "Ref": "SgCidr"
+                        },
+                        "Description": "TCP ports for SUNRPC",
+                        "FromPort": 111,
+                        "IpProtocol": "tcp",
+                        "ToPort": 111
+                    },
+                    {
+                        "CidrIp": {
+                            "Ref": "SgCidr"
+                        },
+                        "Description": "TCP ports for HTTPS",
+                        "FromPort": 443,
+                        "IpProtocol": "tcp",
+                        "ToPort": 443
+                    },
+                    {
+                        "CidrIp": {
+                            "Ref": "SgCidr"
+                        },
+                        "Description": "TCP ports for SMB",
+                        "FromPort": 445,
+                        "IpProtocol": "tcp",
+                        "ToPort": 445
+                    },
+                    {
+                        "CidrIp": {
+                            "Ref": "SgCidr"
+                        },
+                        "Description": "TCP ports for NFS",
+                        "FromPort": 2049,
+                        "IpProtocol": "tcp",
+                        "ToPort": 2049
+                    },
+                    {
+                        "CidrIp": {
+                            "Ref": "SgCidr"
+                        },
+                        "Description": "TCP ports for Replication",
+                        "FromPort": 3712,
+                        "IpProtocol": "tcp",
+                        "ToPort": 3712
+                    },
+                    {
+                        "CidrIp": {
+                            "Ref": "SgCidr"
+                        },
+                        "Description": "TCP ports for REST",
+                        "FromPort": 8000,
+                        "IpProtocol": "tcp",
+                        "ToPort": 8000
+                    },
+                    {
+                        "CidrIp": {
+                            "Ref": "SgCidr"
+                        },
+                        "Description": "UDP port for SUNRPC",
+                        "FromPort": 111,
+                        "IpProtocol": "udp",
+                        "ToPort": 111
+                    },
+                    {
+                        "CidrIp": {
+                            "Ref": "SgCidr"
+                        },
+                        "Description": "UDP port for NFS",
+                        "FromPort": 2049,
+                        "IpProtocol": "udp",
+                        "ToPort": 2049
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "VpcId"
+                }
+            },
+            "Type": "AWS::EC2::SecurityGroup"
+        },
+        "QumuloSecurityGroupNodeRule": {
+            "Properties": {
+                "Description": "Qumulo Internode Communication",
+                "FromPort": 0,
+                "GroupId": {
+                    "Ref": "QumuloSecurityGroup"
+                },
+                "IpProtocol": "-1",
+                "SourceSecurityGroupId": {
+                    "Ref": "QumuloSecurityGroup"
+                },
+                "ToPort": 0
+            },
+            "Type": "AWS::EC2::SecurityGroupIngress"
+        }
+    }
+}

@@ -1,0 +1,548 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+# MIT License
+#
+# Copyright (c) 2021 Qumulo, Inc.
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal 
+# in the Software without restriction, including without limitation the rights 
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell 
+# copies of the Software, and to permit persons to whom the Software is 
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all 
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, 
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE 
+# SOFTWARE.
+
+Description: This template instantiates an EC2 instance for configuration of the Qumulo Cluster and is then shutdown.  Floating IPs, Sidecar role and permissions, EBS Volume Tags, and CMK Policy management are all configured.
+
+Parameters:
+  ProvisioningServerAMI:
+    Type: String
+  SecretsManagedPolicy:
+    Type: String
+  KeyName:
+    Type: String
+  Region:
+    Type: String
+  PrivateSubnetId:
+    Type: String
+  PrivateSubnetCidr:
+    Type: String
+  Node1IP:
+    Type: String
+  NodeIPs:
+    Type: String
+  FloatIPs:
+    Type: String
+  ClusterPwd:
+    Type: String
+  VPCID:
+    Type: String
+  SideCarSecretsArn:
+    Type: String
+  ClusterSecretsArn:
+    Type: String
+  SoftwareSecretsArn:
+    Type: String
+  CMK:
+    Type: String
+  StackName:
+    Type: String
+  BucketName:
+    Type: String
+  KeyPrefix:
+    Type: String 
+  BucketRegion:
+    Type: String
+  InstanceIDs: 
+    Type: String
+  QStackName:
+    Type: String
+  QClusterName:
+    Type: String
+  QClusterVersion:
+    Type: String
+
+Resources:
+  ProvisionerSG:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupDescription: 'Enable ports for Provisioning Management of Qumulo'
+      VpcId: !Ref VPCID
+      SecurityGroupEgress:
+        - CidrIp: 0.0.0.0/0
+          Description: Outbound traffic
+          FromPort: 0
+          IpProtocol: '-1'
+          ToPort: 0
+      SecurityGroupIngress:
+        - CidrIp: !Ref PrivateSubnetCidr
+          Description: 'TCP ports for NFS, SMB, FTP, Management, and Replication'
+          FromPort: '22'
+          IpProtocol: tcp
+          ToPort: '22'
+        - CidrIp: !Ref PrivateSubnetCidr
+          Description: 'TCP ports for NFS, SMB, FTP, Management, and Replication'
+          FromPort: '9999'
+          IpProtocol: tcp
+          ToPort: '9999'
+        - CidrIp: !Ref PrivateSubnetCidr
+          Description: 'TCP ports for NFS, SMB, FTP, Management, and Replication'
+          FromPort: '4172'
+          IpProtocol: tcp
+          ToPort: '4172'
+        - CidrIp: !Ref PrivateSubnetCidr
+          Description: 'TCP ports for NFS, SMB, FTP, Management, and Replication'
+          FromPort: '21'
+          IpProtocol: tcp
+          ToPort: '21'
+        - CidrIp: !Ref PrivateSubnetCidr
+          Description: 'TCP ports for NFS, SMB, FTP, Management, and Replication'
+          FromPort: '80'
+          IpProtocol: tcp
+          ToPort: '80'
+        - CidrIp: !Ref PrivateSubnetCidr
+          Description: 'TCP ports for NFS, SMB, FTP, Management, and Replication'
+          FromPort: '111'
+          IpProtocol: tcp
+          ToPort: '111'
+        - CidrIp: !Ref PrivateSubnetCidr
+          Description: 'TCP ports for NFS, SMB, FTP, Management, and Replication'
+          FromPort: '443'
+          IpProtocol: tcp
+          ToPort: '443'
+        - CidrIp: !Ref PrivateSubnetCidr
+          Description: 'TCP ports for NFS, SMB, FTP, Management, and Replication'
+          FromPort: '445'
+          IpProtocol: tcp
+          ToPort: '445'
+        - CidrIp: !Ref PrivateSubnetCidr
+          Description: 'TCP ports for NFS, SMB, FTP, Management, and Replication'
+          FromPort: '2049'
+          IpProtocol: tcp
+          ToPort: '2049'
+        - CidrIp: !Ref PrivateSubnetCidr
+          Description: 'TCP ports for NFS, SMB, FTP, Management, and Replication'
+          FromPort: '3712'
+          IpProtocol: tcp
+          ToPort: '3712'
+        - CidrIp: !Ref PrivateSubnetCidr
+          Description: 'TCP ports for NFS, SMB, FTP, Management, and Replication'
+          FromPort: '8000'
+          IpProtocol: tcp
+          ToPort: '8000'
+        - CidrIp: !Ref PrivateSubnetCidr
+          Description: UDP ports for NFS
+          FromPort: '111'
+          IpProtocol: udp
+          ToPort: '111'
+        - CidrIp: !Ref PrivateSubnetCidr
+          Description: UDP ports for NFS
+          FromPort: '2049'
+          IpProtocol: udp
+          ToPort: '2049'
+
+  ProvisionerRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Path: /
+      ManagedPolicyArns:
+        - !Ref SecretsManagedPolicy
+      Policies:
+        - PolicyName: S3AccessPolcy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "s3:*"
+                Resource: !Join
+                  - ""
+                  - - "arn:aws:s3:::"
+                    - !Ref BucketName
+                    - "/*"
+        - PolicyName: KMSAccessPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "kms:*"
+                  - "ec2:*"
+                  - "iam:GenerateCredentialReport"
+                  - "iam:GenerateServiceLastAccessedDetails"
+                  - "iam:Get*"
+                  - "iam:List*"
+                  - "iam:SimulateCustomPolicy"
+                  - "iam:SimulatePrincipalPolicy"
+                  - "ssm:*"
+                  - "cloudformation:SetStackPolicy"
+                Resource: "*"
+
+  ProvisionerProfile:
+    Type: "AWS::IAM::InstanceProfile"
+    Properties:
+      Path: "/"
+      Roles:
+        - !Ref ProvisionerRole
+
+  CreationVersionSSM: 
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub "/${QStackName}/creation-version"       
+      Value: "null"
+      Type: String
+
+  InstalledVersionSSM: 
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub "/${QStackName}/installed-version"       
+      Value: "null"
+      Type: String
+
+  InstanceIDsSSM: 
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub "/${QStackName}/instance-ids"       
+      Value: "null"
+      Type: String
+
+  NodeIPsSSM: 
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub "/${QStackName}/node-ips"       
+      Value: "null"
+      Type: String
+
+  UuidSSM: 
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub "/${QStackName}/uuid"       
+      Value: "null"
+      Type: String
+
+  LastRunStatusSSM: 
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub "/${QStackName}/last-run-status"       
+      Value: "null"
+      Type: String
+
+  ProvisioningNode:
+    Type: 'AWS::EC2::Instance'
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Join
+            - ""
+            - - !Ref "AWS::StackName"
+              - " - Qumulo Provisioning Node"
+      ImageId: !Ref ProvisioningServerAMI
+      InstanceType: t3.large
+      InstanceInitiatedShutdownBehavior: stop
+      IamInstanceProfile: !Ref ProvisionerProfile
+      KeyName: !Ref KeyName
+      NetworkInterfaces:
+        - AssociatePublicIpAddress: 'false'
+          DeleteOnTermination: 'true'
+          DeviceIndex: 0
+          GroupSet:
+            - !Ref ProvisionerSG
+          SubnetId: !Ref PrivateSubnetId
+      BlockDeviceMappings:
+        - DeviceName: /dev/sda1
+          Ebs:
+            VolumeType: gp2
+            VolumeSize: '40'
+            DeleteOnTermination: 'true'
+            Encrypted: 'false'
+      UserData:
+        Fn::Base64: !Sub |
+          Content-Type: multipart/mixed; boundary="//"
+          MIME-Version: 1.0
+
+          --//
+          Content-Type: text/cloud-config; charset="us-ascii"
+          MIME-Version: 1.0
+          Content-Transfer-Encoding: 7bit
+          Content-Disposition: attachment; filename="cloud-config.txt"
+
+          #cloud-config
+          cloud_final_modules:
+          - [scripts-user, always]
+
+          --//
+          Content-Type: text/x-shellscript; charset="us-ascii"
+          MIME-Version: 1.0
+          Content-Transfer-Encoding: 7bit
+          Content-Disposition: attachment; filename="userdata.txt"
+
+          #!/bin/bash -xe
+          exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
+            #This user data runs every boot cycle for this Provisioner Instance     
+
+            if [[ -e "qq" ]]; then
+              echo "qq installed already"
+            else
+              wget --no-check-certificate https://${Node1IP}/static/qq
+              chmod 777 ./qq                
+            fi
+
+            if yum list installed "jq" >/dev/null 2>&1; then
+              echo "jq installed already"
+            else
+              yum install -y jq
+            fi
+
+            aws secretsmanager get-secret-value --secret-id ${SideCarSecretsArn} --region ${Region} --query "SecretString" --output text | jq -r .username > /root/username.txt
+            read sc_username < /root/username.txt
+            rm -f /root/username.txt
+            aws secretsmanager get-secret-value --secret-id ${SideCarSecretsArn} --region ${Region} --query "SecretString" --output text | jq -r .password > /root/password.txt
+            read sc_password < /root/password.txt
+            aws secretsmanager get-secret-value --secret-id ${ClusterSecretsArn} --region ${Region} --query "SecretString" --output text | jq -r .password > /root/password.txt
+            read admin_password < /root/password.txt
+            aws secretsmanager get-secret-value --secret-id ${SoftwareSecretsArn} --region ${Region} --query "SecretString" --output text | jq -r .password | xxd -p -r > /root/password.txt
+            read software_password < /root/password.txt
+            rm -f /root/password.txt
+
+            aws ssm put-parameter --region ${Region} --name /${QStackName}/last-run-status --value "Downloaded and installed jq and qq if needed and read secrets" --type String --overwrite          
+
+            qq_host="./qq --host ${Node1IP}"
+            node_ips="${NodeIPs}"
+            instance_ids="${InstanceIDs}"
+            float_ips="${FloatIPs}"
+
+            $qq_host version | grep "revision_id" > revision.txt
+            read revision < revision.txt
+            version_num=${!revision//[!0-9.]/}
+
+            aws ssm put-parameter --region ${Region} --name /${QStackName}/installed-version --value "$version_num" --type String --overwrite
+
+            out_quorum=0
+            in_quorum=0
+            IFS=', ' read -r -a nodeIPs <<< "$node_ips"
+            for m in "${!!nodeIPs[@]}"; do
+              quorum=$(./qq --host ${!nodeIPs[m]} node_state_get)
+              if [[ "$quorum" != *"ACTIVE"* ]]; then
+                (( out_quorum = out_quorum + 1 ))
+              else
+                (( in_quorum = in_quorum + 1 ))
+              fi
+            done            
+
+            if [ $out_quorum -eq ${!#nodeIPs[@]} ] && [ $in_quorum -eq 0 ]; then                   
+              aws ssm put-parameter --region ${Region} --name /${QStackName}/last-run-status --value "All nodes out of quorum, NEW CLUSTER" --type String --overwrite
+
+              new_cluster="true"
+
+              aws s3 cp s3://${BucketName}/${KeyPrefix}cfn-init/stack-policy.json /root/stack_policy.json
+              aws cloudformation set-stack-policy --region ${Region} --stack-name ${QStackName} --stack-policy-body file://root/stack_policy.json
+              aws ssm put-parameter --region ${Region} --name /${QStackName}/creation-version --value "$version_num" --type String --overwrite
+
+              if [ "$version_num" != "${QClusterVersion}" ]; then
+                new_version_num=${QClusterVersion}
+              fi
+
+              IFS=', ' read -r -a upgradeIPs <<< "$node_ips"
+              IFS=', ' read -r -a upgradeIDs <<< "$instance_ids"
+
+            elif [ $in_quorum -gt 3 ]; then  
+              aws ssm put-parameter --region ${Region} --name /${QStackName}/last-run-status --value "3 or more nodes in quorum, checking for node additions" --type String --overwrite
+
+              new_cluster="false"
+
+              IFS=', ' read -r -a newIPs <<< "$node_ips"
+              IFS=', ' read -r -a oldIPs <<< $(aws ssm get-parameter --region ${Region} --name /${QStackName}/node-ips --query "Parameter.Value" --output text)
+              for m in "${!!newIPs[@]}"; do
+                if [[ ! "${!oldIPs[@]}" =~ "${!newIPs[m]}" ]]; then
+                  upgradeIPs+=(${!newIPs[m]})
+                fi
+              done
+
+              IFS=', ' read -r -a newIDs <<< "$instance_ids"
+              IFS=', ' read -r -a oldIDs <<< $(aws ssm get-parameter --region ${Region} --name /${QStackName}/instance-ids --query "Parameter.Value" --output text)
+              for m in "${!!newIDs[@]}"; do
+                if [[ ! "${!oldIDs[@]}" =~ "${!newIDs[m]}" ]]; then
+                  upgradeIDs+=(${!newIDs[m]})
+                fi
+              done
+
+              if [ ${!#upgradeIPs[@]} -gt 0 ]; then
+                ./qq --host ${!upgradeIPs[0]} version | grep "revision_id" > revision.txt
+                read revision < revision.txt
+                add_version_num=${!revision//[!0-9.]/}
+                add_nodes="true"
+                if [ "$version_num" != "$add_version_num" ]; then
+                  new_version_num=$version_num
+                fi
+              fi
+            fi
+
+            if [ -n "$new_version_num" ]; then
+              aws s3api head-object --region ${BucketRegion} --bucket ${BucketName} --key ${KeyPrefix}upgrade/qumulo_upgrade_cloud_$new_version_num.qimg || no_file="true"
+              if [ "$no_file" = "true" ]; then
+                if [ -e "qumulo_upgrade_cloud_$new_version_num.qimg" ]; then
+                  echo "qumulo_upgrade_cloud_$new_version_num.qimg already downloaded to provisioning node"
+                else
+                  aws ssm put-parameter --region ${Region} --name /${QStackName}/last-run-status --value "Downloading Qumulo Core $new_version_num software" --type String --overwrite
+                  wget "https://trends.qumulo.com/data/download/qumulo_upgrade_cloud_$new_version_num.qimg?access_code=$software_password" --output-document=qumulo_upgrade_cloud_$new_version_num.qimg --quiet
+                fi
+                aws s3 cp qumulo_upgrade_cloud_$new_version_num.qimg s3://${BucketName}/${KeyPrefix}upgrade/qumulo_upgrade_cloud_$new_version_num.qimg
+              else
+                echo "qumulo_upgrade_cloud_$new_version_num.qimg already uploaded to S3"                    
+              fi
+
+              aws ssm put-parameter --region ${Region} --name /${QStackName}/last-run-status --value "Upgrading nodes" --type String --overwrite
+
+              signed_url=$(aws s3 presign s3://${BucketName}/${KeyPrefix}upgrade/qumulo_upgrade_cloud_$new_version_num.qimg --region ${BucketRegion})
+
+              for m in "${!!upgradeIPs[@]}"; do
+                ./qq --host ${!upgradeIPs[m]} upgrade_config_set --path "$signed_url" --target "prepare" --override-compatibility-check & 
+              done
+
+              for m in "${!!upgradeIPs[@]}"; do
+                until ./qq --host ${!upgradeIPs[m]} upgrade_status --monitor | grep -q "UPGRADE_PREPARED"; do
+                  sleep 5
+                  echo "Waiting for Upgrade to be prepared for ${!upgradeIPs[m]}"
+                done
+                echo "Upgrade prepared for ${!upgradeIPs[m]}"
+              done
+
+              for m in "${!!upgradeIPs[@]}"; do
+                ./qq --host ${!upgradeIPs[m]} upgrade_config_set --path "$signed_url" --target "arm" --override-compatibility-check & 
+              done
+
+              sleep 60
+             
+              for m in "${!!upgradeIPs[@]}"; do
+                final_version_num="null"
+                while [ "$new_version_num" != "$final_version_num" ]; do
+                  ./qq --host ${!upgradeIPs[m]} version | grep "revision_id" > revision.txt
+                  read revision < revision.txt
+                  final_version_num=${!revision//[!0-9.]/}
+                  sleep 5
+                done 
+                echo "Node ${!upgradeIPs[m]} upgraded to $new_version_num"
+              done
+              aws ssm put-parameter --region ${Region} --name /${QStackName}/installed-version --value "$new_version_num" --type String --overwrite
+            fi
+
+            if [ "$new_cluster" == "true" ]; then
+              ip_list="$node_ips"
+              primary_list=${!ip_list//,/ }
+
+              aws ssm put-parameter --region ${Region} --name /${QStackName}/last-run-status --value "Forming first quorum and configuring cluster" --type String --overwrite
+
+              $qq_host cluster_create --cluster-name ${QClusterName} --admin-password ${ClusterPwd} --max-drive-failures recommended --accept-eula --host-instance-id ${ClusterPwd} --node-ips $primary_list
+              until $qq_host node_state_get | grep -q "ACTIVE"; do
+                sleep 5
+                echo "Waiting for Quorum"
+              done
+              echo "First Quorum formed"
+
+              $qq_host node_state_get | grep "cluster_id" | tr -d '",' > cluster_id.txt
+              read cluster_id < cluster_id.txt
+              uuid=${!cluster_id//"cluster_id: "/}
+
+              aws ssm put-parameter --region ${Region} --name /${QStackName}/uuid --value "$uuid" --type String --overwrite   
+              aws ssm put-parameter --region ${Region} --name /${QStackName}/node-ips --value "$node_ips" --type String --overwrite               
+
+              $qq_host login -u admin -p ${ClusterPwd}
+              $qq_host auth_add_user --name $sc_username --primary-group Guests -p "$sc_password"
+              $qq_host auth_create_role --role $sc_username --description "Qumulo Sidecar User for AWS"
+              $qq_host auth_modify_role --role $sc_username -G PRIVILEGE_ANALYTICS_READ
+              $qq_host auth_modify_role --role $sc_username -G PRIVILEGE_CLUSTER_READ
+              $qq_host auth_modify_role --role $sc_username -G PRIVILEGE_FS_ATTRIBUTES_READ
+              $qq_host auth_modify_role --role $sc_username -G PRIVILEGE_NETWORK_READ
+              $qq_host auth_assign_role --role $sc_username --trustee $sc_username
+              $qq_host network_mod_network --network-id 1 --floating-ip-ranges $float_ips
+              $qq_host change_password -o ${ClusterPwd} -p $admin_password        
+
+              if [ -z "${CMK}" ]; then
+                echo "No CMK specified"
+              else
+                aws ssm put-parameter --region ${Region} --name /${QStackName}/last-run-status --value "Applying CMK policy" --type String --overwrite
+                aws s3 cp s3://${BucketName}/${KeyPrefix}cfn-init/cmk-policy-skeleton.json /root/add_policy.json
+                aws iam list-roles | grep "IamForDiskRecoveryLambda" | grep "Arn" | grep ${StackName} | grep -o '"arn.*"' | tr -d '"' > /root/arn.txt
+                cat /root/arn.txt | grep -o ".*/" | tr -d "/" > /root/role.txt
+                cat /root/arn.txt | grep -o "/.*" | tr -d "/" > /root/lambda.txt
+                sed "s/ROLE/$(cat /root/role.txt)/g" /root/add_policy.json > /root/add_policy2.json
+                sed "s/LAMBDA/$(cat /root/lambda.txt)/g" /root/add_policy2.json > /root/add_policy3.json
+                aws kms get-key-policy --region ${Region} --key-id ${CMK} --policy-name default --output text > /root/def_policy.json
+                head -n -2 /root/def_policy.json > /root/new_policy.json
+                cat /root/add_policy3.json >> /root/new_policy.json
+                aws kms put-key-policy --region ${Region} --key-id ${CMK} --policy-name default --policy file:///root/new_policy.json
+              fi
+
+            elif [ "$add_nodes" == "true" ]; then
+              aws ssm put-parameter --region ${Region} --name /${QStackName}/last-run-status --value "Quorum already exists, adding nodes to cluster" --type String --overwrite
+              $qq_host login -u admin -p $admin_password
+              $qq_host add_nodes --node-ips ${!upgradeIPs[@]}
+              until ./qq --host ${!upgradeIPs[0]} node_state_get | grep -q "ACTIVE"; do
+                sleep 5
+                echo "Waiting for Quorum"
+              done
+              echo "Quorum formed"
+
+              $qq_host network_mod_network --network-id 1 --floating-ip-ranges $float_ips
+
+              aws ssm put-parameter --region ${Region} --name /${QStackName}/node-ips --value "$node_ips" --type String --overwrite    
+
+            else
+              echo "Quorum already exists, no nodes to add to cluster"            
+            fi
+
+            aws ssm put-parameter --region ${Region} --name /${QStackName}/last-run-status --value "Tagging untagged EBS volumes" --type String --overwrite
+
+            for m in "${!!upgradeIDs[@]}"; do 
+              bootIDs+=($(aws ec2 describe-volumes --region ${Region} --filter "Name=attachment.instance-id, Values=${!upgradeIDs[m]}" "Name=attachment.device, Values=/dev/sda*" --query "Volumes[].VolumeId" --out "text"))
+              gp2IDs+=($(aws ec2 describe-volumes --region ${Region} --filter "Name=attachment.instance-id, Values=${!upgradeIDs[m]}" "Name=attachment.device, Values=/dev/x*" "Name=volume-type, Values=gp2" --query "Volumes[].VolumeId" --out "text"))
+              gp3IDs+=($(aws ec2 describe-volumes --region ${Region} --filter "Name=attachment.instance-id, Values=${!upgradeIDs[m]}" "Name=attachment.device, Values=/dev/x*" "Name=volume-type, Values=gp3" --query "Volumes[].VolumeId" --out "text"))
+              st1IDs+=($(aws ec2 describe-volumes --region ${Region} --filter "Name=attachment.instance-id, Values=${!upgradeIDs[m]}" "Name=attachment.device, Values=/dev/x*" "Name=volume-type, Values=st1" --query "Volumes[].VolumeId" --out "text"))
+              sc1IDs+=($(aws ec2 describe-volumes --region ${Region} --filter "Name=attachment.instance-id, Values=${!upgradeIDs[m]}" "Name=attachment.device, Values=/dev/x*" "Name=volume-type, Values=sc1" --query "Volumes[].VolumeId" --out "text"))                           
+            done
+            for m in "${!!bootIDs[@]}"; do
+              aws ec2 create-tags --region ${Region} --resources ${!bootIDs[m]} --tags "Key=Name,Value=${QStackName}-boot"
+            done 
+            for m in "${!!gp2IDs[@]}"; do
+              aws ec2 create-tags --region ${Region} --resources ${!gp2IDs[m]} --tags "Key=Name,Value=${QStackName}-gp2"
+            done 
+            for m in "${!!gp3IDs[@]}"; do
+              aws ec2 create-tags --region ${Region} --resources ${!gp3IDs[m]} --tags "Key=Name,Value=${QStackName}-gp3"
+            done 
+            for m in "${!!st1IDs[@]}"; do
+              aws ec2 create-tags --region ${Region} --resources ${!st1IDs[m]} --tags "Key=Name,Value=${QStackName}-st1"
+            done 
+            for m in "${!!sc1IDs[@]}"; do
+              aws ec2 create-tags --region ${Region} --resources ${!sc1IDs[m]} --tags "Key=Name,Value=${QStackName}-sc1"
+            done  
+
+            aws ssm put-parameter --region ${Region} --name /${QStackName}/instance-ids --value "$instance_ids" --type String --overwrite              
+            aws ssm put-parameter --region ${Region} --name /${QStackName}/last-run-status --value "Shutting down provisioning node" --type String --overwrite
+            sleep 10
+            echo "Powering off Provisioning Node"
+            poweroff
+
+          --//
+
+Outputs:
+  ProvisionerSGID:
+    Value: !Ref ProvisionerSG

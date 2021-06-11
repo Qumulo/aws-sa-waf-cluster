@@ -1,0 +1,129 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+# MIT License
+#
+# Copyright (c) 2021 Qumulo, Inc.
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal 
+# in the Software without restriction, including without limitation the rights 
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell 
+# copies of the Software, and to permit persons to whom the Software is 
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all 
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, 
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE 
+# SOFTWARE.
+
+Description: This template creates an resource group for the QSTACK for easy filtering in Cloud Watch
+
+Parameters:
+  QStackID:
+    Type: String
+  QStackName:
+    Type: String
+  TopStackName:
+    Type: String
+  AllFlash:
+    Type: String
+
+Conditions:
+  HDD: !Not
+    - !Equals 
+      - !Ref AllFlash
+      - AF
+
+Resources:
+  ClusterRG:
+    Type: "AWS::ResourceGroups::Group" 
+    Properties: 
+      Name: !Sub "${TopStackName}-Qumulo-Cluster"
+      ResourceQuery: 
+        Type: "CLOUDFORMATION_STACK_1_0" 
+        Query: 
+          ResourceTypeFilters:
+            - "AWS::AllSupported" 
+          StackIdentifier: !Ref QStackID
+
+  ClusterRGSSD:
+    Type: "AWS::ResourceGroups::Group" 
+    Properties: 
+      Name: !Sub "${TopStackName}-Qumulo-Cluster-SSD"
+      ResourceQuery: 
+        Type: "TAG_FILTERS_1_0" 
+        Query: 
+          ResourceTypeFilters:
+            - "AWS::AllSupported" 
+          TagFilters:
+            - Key: Name
+              Values:
+                - !Sub "${QStackName}-gp2"
+                - !Sub "${QStackName}-gp3"
+
+  ClusterRGHDD:
+    Type: "AWS::ResourceGroups::Group" 
+    Condition: HDD
+    Properties: 
+      Name: !Sub "${TopStackName}-Qumulo-Cluster-HDD"
+      ResourceQuery: 
+        Type: "TAG_FILTERS_1_0" 
+        Query: 
+          ResourceTypeFilters:
+            - "AWS::AllSupported" 
+          TagFilters:
+            - Key: Name
+              Values:
+                - !Sub "${QStackName}-st1"
+                - !Sub "${QStackName}-sc1"
+
+#  DashboardSideBySide:
+#     Type: AWS::CloudWatch::Dashboard
+#     Properties:
+#       DashboardName: !Sub "${TopStackName}-Qumulo-Cluster"
+#       DashboardBody: '{"widgets":[
+#         {
+#           "type":"metric",
+#           "x":0,"y":0,
+#           "width":12,
+#           "height":6,
+#           "properties":
+#           {
+#             "metrics":[["AWS/EC2","CPUUtilization","InstanceId","i-xyz"]],
+#             "period":300,
+#             "stat":"Average",
+#             "region":"us-west-2",
+#             "title":"EC2 Instance CPU"
+#           }
+#         },
+#         {
+#           "type":"metric",
+#           "x":12,
+#           "y":0,
+#           "width":12,
+#           "height":6,
+#           "properties":
+#           {
+#             "metrics":[["AWS/S3","BucketSizeBytes","BucketName","mybucket"]],
+#             "period":86400,
+#             "stat":"Maximum",
+#             "region":"us-west-2",
+#             "title":"MyBucketName bytes"
+#           }
+#         }
+#       ]}'
+
+Outputs:
+  QumuloClusterRG:
+    Value: !Ref ClusterRG
+  QumuloClusterSSDRG:
+    Value: !Ref ClusterRGSSD
+  QumuloClusterHDDRG:
+    Condition: HDD
+    Value: !Ref ClusterRGHDD
