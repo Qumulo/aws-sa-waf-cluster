@@ -1,4 +1,4 @@
-[![Qumulo Logo](https://qumulo.com/wp-content/uploads/2019/03/Q-logo-onwhite.png)](http://qumulo.com)
+[![Qumulo Logo](https://qumulo.com/wp-content/uploads/2021/06/CloudQ-Logo_OnLight.png)](http://qumulo.com)
 
 # aws-sa-waf-cluster
 AWS CloudFormation templates to deploy a Qumulo cluster with one to 10 instances per the AWS Well Architected Framework.
