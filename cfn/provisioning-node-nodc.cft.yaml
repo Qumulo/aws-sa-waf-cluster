@@ -207,42 +207,42 @@ Resources:
   CreationVersionSSM: 
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub "/${QStackName}/creation-version"       
+      Name: !Sub "/qumulo/${QStackName}/creation-version"       
       Value: "null"
       Type: String
 
   InstalledVersionSSM: 
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub "/${QStackName}/installed-version"       
+      Name: !Sub "/qumulo/${QStackName}/installed-version"       
       Value: "null"
       Type: String
 
   InstanceIDsSSM: 
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub "/${QStackName}/instance-ids"       
+      Name: !Sub "/qumulo/${QStackName}/instance-ids"       
       Value: "null"
       Type: String
 
   NodeIPsSSM: 
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub "/${QStackName}/node-ips"       
+      Name: !Sub "/qumulo/${QStackName}/node-ips"       
       Value: "null"
       Type: String
 
   UuidSSM: 
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub "/${QStackName}/uuid"       
+      Name: !Sub "/qumulo/${QStackName}/uuid"       
       Value: "null"
       Type: String
 
   LastRunStatusSSM: 
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub "/${QStackName}/last-run-status"       
+      Name: !Sub "/qumulo/${QStackName}/last-run-status"       
       Value: "null"
       Type: String
 
@@ -299,6 +299,12 @@ Resources:
           exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
             #This user data runs every boot cycle for this Provisioner Instance     
 
+            if [ $(curl -sL -w "%{http_code}\\n" "google.com" -o /dev/null --connect-timeout 3 --max-time 5) == "200" ]; then 
+              aws ssm put-parameter --region ${Region} --name /qumulo/${QStackName}/last-run-status --value "Public Internet Reachable" --type String --overwrite          
+            else 
+              aws ssm put-parameter --region ${Region} --name /qumulo/${QStackName}/last-run-status --value "NO Public Internet Connectivity, resolve and reboot provisioning instance" --type String --overwrite          
+            fi
+            
             if [[ -e "qq" ]]; then
               echo "qq installed already"
             else
@@ -323,7 +329,7 @@ Resources:
             read software_password < /root/password.txt
             rm -f /root/password.txt
 
-            aws ssm put-parameter --region ${Region} --name /${QStackName}/last-run-status --value "Downloaded and installed jq and qq if needed and read secrets" --type String --overwrite          
+            aws ssm put-parameter --region ${Region} --name /qumulo/${QStackName}/last-run-status --value "Downloaded and installed jq and qq if needed and read secrets" --type String --overwrite          
 
             qq_host="./qq --host ${Node1IP}"
             node_ips="${NodeIPs}"
@@ -334,7 +340,7 @@ Resources:
             read revision < revision.txt
             version_num=${!revision//[!0-9.]/}
 
-            aws ssm put-parameter --region ${Region} --name /${QStackName}/installed-version --value "$version_num" --type String --overwrite
+            aws ssm put-parameter --region ${Region} --name /qumulo/${QStackName}/installed-version --value "$version_num" --type String --overwrite
 
             out_quorum=0
             in_quorum=0
@@ -349,13 +355,13 @@ Resources:
             done            
 
             if [ $out_quorum -eq ${!#nodeIPs[@]} ] && [ $in_quorum -eq 0 ]; then                   
-              aws ssm put-parameter --region ${Region} --name /${QStackName}/last-run-status --value "All nodes out of quorum, NEW CLUSTER" --type String --overwrite
+              aws ssm put-parameter --region ${Region} --name /qumulo/${QStackName}/last-run-status --value "All nodes out of quorum, NEW CLUSTER" --type String --overwrite
 
               new_cluster="true"
 
               aws s3 cp s3://${BucketName}/${KeyPrefix}cfn-init/stack-policy.json /root/stack_policy.json
               aws cloudformation set-stack-policy --region ${Region} --stack-name ${QStackName} --stack-policy-body file://root/stack_policy.json
-              aws ssm put-parameter --region ${Region} --name /${QStackName}/creation-version --value "$version_num" --type String --overwrite
+              aws ssm put-parameter --region ${Region} --name /qumulo/${QStackName}/creation-version --value "$version_num" --type String --overwrite
 
               if [ "$version_num" != "${QClusterVersion}" ]; then
                 new_version_num=${QClusterVersion}
@@ -365,12 +371,12 @@ Resources:
               IFS=', ' read -r -a upgradeIDs <<< "$instance_ids"
 
             elif [ $in_quorum -gt 3 ]; then  
-              aws ssm put-parameter --region ${Region} --name /${QStackName}/last-run-status --value "3 or more nodes in quorum, checking for node additions" --type String --overwrite
+              aws ssm put-parameter --region ${Region} --name /qumulo/${QStackName}/last-run-status --value "3 or more nodes in quorum, checking for node additions" --type String --overwrite
 
               new_cluster="false"
 
               IFS=', ' read -r -a newIPs <<< "$node_ips"
-              IFS=', ' read -r -a oldIPs <<< $(aws ssm get-parameter --region ${Region} --name /${QStackName}/node-ips --query "Parameter.Value" --output text)
+              IFS=', ' read -r -a oldIPs <<< $(aws ssm get-parameter --region ${Region} --name /qumulo/${QStackName}/node-ips --query "Parameter.Value" --output text)
               for m in "${!!newIPs[@]}"; do
                 if [[ ! "${!oldIPs[@]}" =~ "${!newIPs[m]}" ]]; then
                   upgradeIPs+=(${!newIPs[m]})
@@ -378,7 +384,7 @@ Resources:
               done
 
               IFS=', ' read -r -a newIDs <<< "$instance_ids"
-              IFS=', ' read -r -a oldIDs <<< $(aws ssm get-parameter --region ${Region} --name /${QStackName}/instance-ids --query "Parameter.Value" --output text)
+              IFS=', ' read -r -a oldIDs <<< $(aws ssm get-parameter --region ${Region} --name /qumulo/${QStackName}/instance-ids --query "Parameter.Value" --output text)
               for m in "${!!newIDs[@]}"; do
                 if [[ ! "${!oldIDs[@]}" =~ "${!newIDs[m]}" ]]; then
                   upgradeIDs+=(${!newIDs[m]})
@@ -402,7 +408,7 @@ Resources:
                 if [ -e "qumulo_upgrade_cloud_$new_version_num.qimg" ]; then
                   echo "qumulo_upgrade_cloud_$new_version_num.qimg already downloaded to provisioning node"
                 else
-                  aws ssm put-parameter --region ${Region} --name /${QStackName}/last-run-status --value "Downloading Qumulo Core $new_version_num software" --type String --overwrite
+                  aws ssm put-parameter --region ${Region} --name /qumulo/${QStackName}/last-run-status --value "Downloading Qumulo Core $new_version_num software" --type String --overwrite
                   wget "https://trends.qumulo.com/data/download/qumulo_upgrade_cloud_$new_version_num.qimg?access_code=$software_password" --output-document=qumulo_upgrade_cloud_$new_version_num.qimg --quiet
                 fi
                 aws s3 cp qumulo_upgrade_cloud_$new_version_num.qimg s3://${BucketName}/${KeyPrefix}upgrade/qumulo_upgrade_cloud_$new_version_num.qimg
@@ -410,7 +416,7 @@ Resources:
                 echo "qumulo_upgrade_cloud_$new_version_num.qimg already uploaded to S3"                    
               fi
 
-              aws ssm put-parameter --region ${Region} --name /${QStackName}/last-run-status --value "Upgrading nodes" --type String --overwrite
+              aws ssm put-parameter --region ${Region} --name /qumulo/${QStackName}/last-run-status --value "Upgrading nodes" --type String --overwrite
 
               signed_url=$(aws s3 presign s3://${BucketName}/${KeyPrefix}upgrade/qumulo_upgrade_cloud_$new_version_num.qimg --region ${BucketRegion})
 
@@ -442,14 +448,14 @@ Resources:
                 done 
                 echo "Node ${!upgradeIPs[m]} upgraded to $new_version_num"
               done
-              aws ssm put-parameter --region ${Region} --name /${QStackName}/installed-version --value "$new_version_num" --type String --overwrite
+              aws ssm put-parameter --region ${Region} --name /qumulo/${QStackName}/installed-version --value "$new_version_num" --type String --overwrite
             fi
 
             if [ "$new_cluster" == "true" ]; then
               ip_list="$node_ips"
               primary_list=${!ip_list//,/ }
 
-              aws ssm put-parameter --region ${Region} --name /${QStackName}/last-run-status --value "Forming first quorum and configuring cluster" --type String --overwrite
+              aws ssm put-parameter --region ${Region} --name /qumulo/${QStackName}/last-run-status --value "Forming first quorum and configuring cluster" --type String --overwrite
 
               $qq_host cluster_create --cluster-name ${QClusterName} --admin-password ${ClusterPwd} --max-drive-failures recommended --accept-eula --host-instance-id ${ClusterPwd} --node-ips $primary_list
               until $qq_host node_state_get | grep -q "ACTIVE"; do
@@ -462,8 +468,8 @@ Resources:
               read cluster_id < cluster_id.txt
               uuid=${!cluster_id//"cluster_id: "/}
 
-              aws ssm put-parameter --region ${Region} --name /${QStackName}/uuid --value "$uuid" --type String --overwrite   
-              aws ssm put-parameter --region ${Region} --name /${QStackName}/node-ips --value "$node_ips" --type String --overwrite               
+              aws ssm put-parameter --region ${Region} --name /qumulo/${QStackName}/uuid --value "$uuid" --type String --overwrite   
+              aws ssm put-parameter --region ${Region} --name /qumulo/${QStackName}/node-ips --value "$node_ips" --type String --overwrite               
 
               $qq_host login -u admin -p ${ClusterPwd}
               $qq_host auth_add_user --name $sc_username --primary-group Guests -p "$sc_password"
@@ -479,7 +485,7 @@ Resources:
               if [ -z "${CMK}" ]; then
                 echo "No CMK specified"
               else
-                aws ssm put-parameter --region ${Region} --name /${QStackName}/last-run-status --value "Applying CMK policy" --type String --overwrite
+                aws ssm put-parameter --region ${Region} --name /qumulo/${QStackName}/last-run-status --value "Applying CMK policy" --type String --overwrite
                 aws s3 cp s3://${BucketName}/${KeyPrefix}cfn-init/cmk-policy-skeleton.json /root/add_policy.json
                 aws iam list-roles | grep "IamForDiskRecoveryLambda" | grep "Arn" | grep ${StackName} | grep -o '"arn.*"' | tr -d '"' > /root/arn.txt
                 cat /root/arn.txt | grep -o ".*/" | tr -d "/" > /root/role.txt
@@ -493,7 +499,7 @@ Resources:
               fi
 
             elif [ "$add_nodes" == "true" ]; then
-              aws ssm put-parameter --region ${Region} --name /${QStackName}/last-run-status --value "Quorum already exists, adding nodes to cluster" --type String --overwrite
+              aws ssm put-parameter --region ${Region} --name /qumulo/${QStackName}/last-run-status --value "Quorum already exists, adding nodes to cluster" --type String --overwrite
               $qq_host login -u admin -p $admin_password
               $qq_host add_nodes --node-ips ${!upgradeIPs[@]}
               until ./qq --host ${!upgradeIPs[0]} node_state_get | grep -q "ACTIVE"; do
@@ -504,13 +510,13 @@ Resources:
 
               $qq_host network_mod_network --network-id 1 --floating-ip-ranges $float_ips
 
-              aws ssm put-parameter --region ${Region} --name /${QStackName}/node-ips --value "$node_ips" --type String --overwrite    
+              aws ssm put-parameter --region ${Region} --name /qumulo/${QStackName}/node-ips --value "$node_ips" --type String --overwrite    
 
             else
               echo "Quorum already exists, no nodes to add to cluster"            
             fi
 
-            aws ssm put-parameter --region ${Region} --name /${QStackName}/last-run-status --value "Tagging untagged EBS volumes" --type String --overwrite
+            aws ssm put-parameter --region ${Region} --name /qumulo/${QStackName}/last-run-status --value "Tagging untagged EBS volumes" --type String --overwrite
 
             for m in "${!!upgradeIDs[@]}"; do 
               bootIDs+=($(aws ec2 describe-volumes --region ${Region} --filter "Name=attachment.instance-id, Values=${!upgradeIDs[m]}" "Name=attachment.device, Values=/dev/sda*" --query "Volumes[].VolumeId" --out "text"))
@@ -535,8 +541,8 @@ Resources:
               aws ec2 create-tags --region ${Region} --resources ${!sc1IDs[m]} --tags "Key=Name,Value=${QStackName}-sc1"
             done  
 
-            aws ssm put-parameter --region ${Region} --name /${QStackName}/instance-ids --value "$instance_ids" --type String --overwrite              
-            aws ssm put-parameter --region ${Region} --name /${QStackName}/last-run-status --value "Shutting down provisioning node" --type String --overwrite
+            aws ssm put-parameter --region ${Region} --name /qumulo/${QStackName}/instance-ids --value "$instance_ids" --type String --overwrite              
+            aws ssm put-parameter --region ${Region} --name /qumulo/${QStackName}/last-run-status --value "Shutting down provisioning node" --type String --overwrite
             sleep 10
             echo "Powering off Provisioning Node"
             poweroff

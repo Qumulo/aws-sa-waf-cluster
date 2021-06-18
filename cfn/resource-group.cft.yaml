@@ -44,7 +44,7 @@ Resources:
   ClusterRG:
     Type: "AWS::ResourceGroups::Group" 
     Properties: 
-      Name: !Sub "${TopStackName}-Qumulo-Cluster"
+      Name: !Sub "Qumulo-Cluster-EC2-${TopStackName}"
       ResourceQuery: 
         Type: "CLOUDFORMATION_STACK_1_0" 
         Query: 
@@ -55,7 +55,7 @@ Resources:
   ClusterRGSSD:
     Type: "AWS::ResourceGroups::Group" 
     Properties: 
-      Name: !Sub "${TopStackName}-Qumulo-Cluster-SSD"
+      Name: !Sub "Qumulo-Cluster-SSD-${TopStackName}"
       ResourceQuery: 
         Type: "TAG_FILTERS_1_0" 
         Query: 
@@ -71,7 +71,7 @@ Resources:
     Type: "AWS::ResourceGroups::Group" 
     Condition: HDD
     Properties: 
-      Name: !Sub "${TopStackName}-Qumulo-Cluster-HDD"
+      Name: !Sub "Qumulo-Cluster-HDD-${TopStackName}"
       ResourceQuery: 
         Type: "TAG_FILTERS_1_0" 
         Query: 
