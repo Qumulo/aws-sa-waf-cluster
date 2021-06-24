@@ -45,10 +45,19 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
-                  - "ec2:*"
-                  - "cloudwatch:*"
-                  - "kms:*"
-                  - "s3:*"
+                  - "cloudwatch:DeleteAlarms"
+                  - "cloudwatch:PutMetricAlarm"
+                  - "ec2:DescribeInstances"
+                  - "ec2:AssignPrivateIpAddresses"
+                  - "ec2:UnassignPrivateIpAddresses"
+                  - "kms:Decrypt"
+                  - "kms:GenerateDataKeyWithoutPlaintext"
+                  - "kms:ReEncryptFrom"
+                  - "kms:ReEncryptTo"
+                  - "kms:DescribeKey"
+                  - "kms:CreateGrant"
+                  - "logs:PutLogEvents"
+                  - "logs:CreateLogStream"
                 Resource: "*"
 
   QumuloAccessProfile:

@@ -15,7 +15,7 @@ or by [Contacting Qumulo Sales](http://discover.qumulo.com/cloud-calc-contact.ht
 ## Usage
 
 **IMPORTANT:** The `master` branch is used in `source` just as an example. In your code, do not pin to `master` because there may be breaking changes between releases.
-Instead pin to a release tag (e.g. `?ref=tags/x.y.z`).
+Instead pin to a release tag (e.g. `?ref=tags/vx.y`).
 
 For architectural details, resource requirements, deployment instructions, and configuration options see the [deployment guide](./docs/aws-sa-waf-cluster.pdf).
 

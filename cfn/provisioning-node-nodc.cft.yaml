@@ -185,16 +185,23 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
-                  - "kms:*"
-                  - "ec2:*"
-                  - "iam:GenerateCredentialReport"
-                  - "iam:GenerateServiceLastAccessedDetails"
-                  - "iam:Get*"
-                  - "iam:List*"
-                  - "iam:SimulateCustomPolicy"
-                  - "iam:SimulatePrincipalPolicy"
-                  - "ssm:*"
                   - "cloudformation:SetStackPolicy"
+                  - "ec2:DeleteTags"
+                  - "ec2:CreateTags"
+                  - "ec2:DescribeVolumes"
+                  - "iam:GenerateCredentialReport"
+                  - "iam:List*"
+                  - "iam:Get*"
+                  - "iam:GenerateServiceLastAccessedDetails"
+                  - "iam:SimulatePrincipalPolicy"
+                  - "iam:SimulateCustomPolicy"
+                  - "kms:Decrypt"
+                  - "kms:PutKeyPolicy"
+                  - "kms:GetKeyPolicy"
+                  - "ssm:ListInstanceAssociations"
+                  - "ssm:GetParameter"
+                  - "ssm:PutParameter"
+                  - "ssm:UpdateInstanceInformation"
                 Resource: "*"
 
   ProvisionerProfile:
@@ -480,6 +487,7 @@ Resources:
               $qq_host auth_modify_role --role $sc_username -G PRIVILEGE_NETWORK_READ
               $qq_host auth_assign_role --role $sc_username --trustee $sc_username
               $qq_host network_mod_network --network-id 1 --floating-ip-ranges $float_ips
+              $qq_host audit_set_cloudwatch_config --enable --log-group-name /qumulo/${StackName} --region ${Region}
               $qq_host change_password -o ${ClusterPwd} -p $admin_password        
 
               if [ -z "${CMK}" ]; then

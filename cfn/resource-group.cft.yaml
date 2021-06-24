@@ -22,16 +22,22 @@ AWSTemplateFormatVersion: "2010-09-09"
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE 
 # SOFTWARE.
 
-Description: This template creates an resource group for the QSTACK for easy filtering in Cloud Watch
+Description: This template creates an resource group, audit log group, and dashboard for the QSTACK for easy filtering and monitoring in Cloud Watch
 
 Parameters:
+  QClusterName:
+    Type: String  
   QStackID:
     Type: String
   QStackName:
-    Type: String
+    Type: String 
   TopStackName:
     Type: String
+  QAuditLog:
+    Type: String
   AllFlash:
+    Type: String
+  Region:
     Type: String
 
 Conditions:
@@ -39,6 +45,11 @@ Conditions:
     - !Equals 
       - !Ref AllFlash
       - AF
+
+  CreateLog: !Not
+    - !Equals
+      - !Ref QAuditLog
+      - "NO"
 
 Resources:
   ClusterRG:
@@ -83,41 +94,170 @@ Resources:
                 - !Sub "${QStackName}-st1"
                 - !Sub "${QStackName}-sc1"
 
-#  DashboardSideBySide:
-#     Type: AWS::CloudWatch::Dashboard
-#     Properties:
-#       DashboardName: !Sub "${TopStackName}-Qumulo-Cluster"
-#       DashboardBody: '{"widgets":[
-#         {
-#           "type":"metric",
-#           "x":0,"y":0,
-#           "width":12,
-#           "height":6,
-#           "properties":
-#           {
-#             "metrics":[["AWS/EC2","CPUUtilization","InstanceId","i-xyz"]],
-#             "period":300,
-#             "stat":"Average",
-#             "region":"us-west-2",
-#             "title":"EC2 Instance CPU"
-#           }
-#         },
-#         {
-#           "type":"metric",
-#           "x":12,
-#           "y":0,
-#           "width":12,
-#           "height":6,
-#           "properties":
-#           {
-#             "metrics":[["AWS/S3","BucketSizeBytes","BucketName","mybucket"]],
-#             "period":86400,
-#             "stat":"Maximum",
-#             "region":"us-west-2",
-#             "title":"MyBucketName bytes"
-#           }
-#         }
-#       ]}'
+  ClusterLogGroup:
+    Type: "AWS::Logs::LogGroup" 
+    Condition: CreateLog
+    Properties: 
+      LogGroupName: !Sub "/qumulo/${TopStackName}"
+
+  ClusterDashboard:
+    Type: "AWS::CloudWatch::Dashboard"
+    Properties:
+      DashboardName: !Sub "Qumulo-Cluster-${QStackName}"
+      DashboardBody: !Sub '{
+        "widgets": [
+            {
+                "type": "metric",
+                "x": 15,
+                "y": 0,
+                "width": 9,
+                "height": 6,
+                "properties": {
+                    "metrics": [
+                        [ "Qumulo/Metrics", "FileSystemFreeCapacity", "ClusterName", "${QClusterName}", { "id": "m2" } ]
+                    ],
+                    "view": "timeSeries",
+                    "stacked": false,
+                    "region": "${Region}",
+                    "title": "File System Available Capacity",
+                    "period": 300,
+                    "stat": "Average",
+                    "yAxis": {
+                        "left": {
+                            "label": ""
+                        }
+                    }
+                }
+            },
+            {
+                "type": "metric",
+                "x": 9,
+                "y": 0,
+                "width": 6,
+                "height": 3,
+                "properties": {
+                    "metrics": [
+                        [ "Qumulo/Metrics", "RemainingNodeFailures", "ClusterName", "${QClusterName}" ]
+                    ],
+                    "view": "singleValue",
+                    "region": "${Region}",
+                    "title": "EC2 Instance Protection",
+                    "period": 300,
+                    "stat": "Minimum"
+                }
+            },
+            {
+                "type": "metric",
+                "x": 0,
+                "y": 0,
+                "width": 9,
+                "height": 3,
+                "properties": {
+                    "metrics": [
+                        [ "Qumulo/Metrics", "TotalNodeCount", "ClusterName", "${QClusterName}" ],
+                        [ ".", "HealthyNodeCount", ".", "." ]
+                    ],
+                    "view": "singleValue",
+                    "region": "${Region}",
+                    "title": "Cluster EC2 Instances",
+                    "period": 300,
+                    "stat": "Minimum"
+                }
+            },
+            {
+                "type": "metric",
+                "x": 0,
+                "y": 3,
+                "width": 9,
+                "height": 3,
+                "properties": {
+                    "metrics": [
+                        [ "Qumulo/Metrics", "FailedDriveCount", "ClusterName", "${QClusterName}" ]
+                    ],
+                    "view": "singleValue",
+                    "region": "${Region}",
+                    "title": "Failed EBS Volumes",
+                    "period": 300,
+                    "stat": "Maximum"
+                }
+            },
+            {
+                "type": "metric",
+                "x": 9,
+                "y": 3,
+                "width": 6,
+                "height": 3,
+                "properties": {
+                    "metrics": [
+                        [ "Qumulo/Metrics", "RemainingDriveFailures", "ClusterName", "${QClusterName}" ]
+                    ],
+                    "view": "singleValue",
+                    "region": "${Region}",
+                    "title": "EBS Volume Protection",
+                    "period": 300,
+                    "stat": "Minimum"
+                }
+            },
+            {
+                "type": "metric",
+                "x": 0,
+                "y": 6,
+                "width": 9,
+                "height": 6,
+                "properties": {
+                    "metrics": [
+                        [ "Qumulo/Metrics", "ProtocolReadThroughput", "ClusterName", "${QClusterName}" ],
+                        [ ".", "ProtocolWriteThroughput", ".", "." ]
+                    ],
+                    "view": "timeSeries",
+                    "stacked": false,
+                    "region": "${Region}",
+                    "title": "Protocol Throughput",
+                    "period": 60,
+                    "stat": "Average"
+                }
+            },
+            {
+                "type": "metric",
+                "x": 15,
+                "y": 6,
+                "width": 9,
+                "height": 6,
+                "properties": {
+                    "metrics": [
+                        [ "Qumulo/Metrics", "ProtocolReadLatency", "ClusterName", "${QClusterName}" ],
+                        [ ".", "ProtocolWriteLatency", ".", "." ],
+                        [ ".", "ProtocolMetadataLatency", ".", "." ]
+                    ],
+                    "view": "timeSeries",
+                    "stacked": false,
+                    "region": "${Region}",
+                    "title": "Protocol Latency",
+                    "period": 60,
+                    "stat": "Average"
+                }
+            },
+            {
+                "type": "metric",
+                "x": 9,
+                "y": 6,
+                "width": 6,
+                "height": 6,
+                "properties": {
+                    "metrics": [
+                        [ "Qumulo/Metrics", "ProtocolReadOps", "ClusterName", "${QClusterName}" ],
+                        [ ".", "ProtocolWriteOps", ".", "." ]
+                    ],
+                    "view": "timeSeries",
+                    "stacked": false,
+                    "region": "${Region}",
+                    "title": "Protocol IOPS",
+                    "period": 60,
+                    "stat": "Average"
+                }
+            }
+        ]
+    }'
 
 Outputs:
   QumuloClusterRG:
@@ -127,3 +267,9 @@ Outputs:
   QumuloClusterHDDRG:
     Condition: HDD
     Value: !Ref ClusterRGHDD
+  QumuloCluserCloudWatchDashboard:
+    Value: !Ref ClusterDashboard
+  QumuloClusterLogGroup:
+    Condition: CreateLog
+    Value: !Ref ClusterLogGroup
+    

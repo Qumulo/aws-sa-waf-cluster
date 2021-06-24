@@ -28,7 +28,7 @@ Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
       - Label:
-          default: AWS Template Configuration - aws-sa-waf-cluster version 2.5
+          default: AWS Template Configuration - aws-sa-waf-cluster version 2.6
         Parameters:
           - S3BucketName
           - S3KeyPrefix
@@ -63,6 +63,7 @@ Metadata:
           - QFloatingIP
           - VolumesEncryptionKey
           - QInstanceRecoveryTopic
+          - QAuditLog
           - ProvisioningServerAMI
 
       - Label:
@@ -120,6 +121,8 @@ Metadata:
         default: "OPTIONAL: AWS EBS Volumes Encryption Key "
       QInstanceRecoveryTopic:
         default: "OPTIONAL: Qumulo Instance Recovery Topic"
+      QAuditLog:
+        default: "OPTIONAL: Send Qumulo Audit Log messages to CloudWatch Logs? "
       ProvisioningServerAMI:
         default: "Linux Server for Secondary Configuration of Qumulo "
       QClusterLocalZone:
@@ -295,7 +298,7 @@ Parameters:
     MaxLength: 11
     MinLength: 5
     Type: String
-    Default: "4.1.0"
+    Default: "4.1.3"
 
   QClusterAdminPwd:
     AllowedPattern: "^(?=.*[a-z])(?=.*[A-Z])(?=.*[@$!%*?&\\-_])[A-Za-z\\d@$!%*?&\\-_]{8,}$"
@@ -350,6 +353,14 @@ Parameters:
     Type: String
     Default: "NO"
 
+  QAuditLog:
+    Description: Select YES to create a CloudWatch Logs Group for the Qumulo Cluster that captures all Qumulo Audit Log Activity
+    AllowedValues:
+      - "YES"
+      - "NO"
+    Type: String
+    Default: "NO"
+
   SideCarPrivateSubnetID:
     Type: AWS::EC2::Subnet::Id
     Description: "An AWS subnet ID must be selected regardless of the choice above but is only used if YES is chosen above.
@@ -362,7 +373,7 @@ Parameters:
     MaxLength: 11
     MinLength: 5
     Type: String
-    Default: "4.1.0"
+    Default: "4.1.3"
 
   SideCarUsername:
     Type: String
@@ -501,10 +512,13 @@ Resources:
     DependsOn: PROVISIONINGSTACK
     Properties:
       Parameters:
+        QClusterName: !Ref QClusterName        
         QStackID: !GetAtt QSTACK.Outputs.AWSStackID
         QStackName: !GetAtt QSTACK.Outputs.AWSStackName
         TopStackName: !Ref AWS::StackName
         AllFlash: !Select [1, !Split ["-", !Ref QDiskConfig]]
+        QAuditLog: !Ref QAuditLog
+        Region: !Ref AWS::Region        
       TemplateURL: !Sub "https://${S3BucketName}.s3.${AWS::URLSuffix}/${S3KeyPrefix}cfn/resource-group.cft.yaml"
 
   DNSSTACK:
