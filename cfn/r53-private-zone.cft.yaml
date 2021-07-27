@@ -40,42 +40,174 @@ Parameters:
   RecordName:
     Type: String
 
+Mappings:
+  FloatMap:
+    "4":
+      "1": "4"
+      "2": "8"
+      "3": "12"
+      "4": "16"
+    "5":
+      "1": "5"
+      "2": "10"
+      "3": "15"
+      "4": "20"
+    "6":
+      "1": "6"
+      "2": "12"
+      "3": "18"
+      "4": "24"
+    "7":
+      "1": "7"
+      "2": "14"
+      "3": "21"
+      "4": "28"
+    "8":
+      "1": "8"
+      "2": "16"
+      "3": "24"
+      "4": "32"
+    "9":
+      "1": "9"
+      "2": "18"
+      "3": "27"
+      "4": "36"
+    "10":
+      "1": "10"
+      "2": "20"
+      "3": "30"
+      "4": "40"
+    "11":
+      "1": "11"
+      "2": "22"
+      "3": "33"
+      "4": "44"
+    "12":
+      "1": "12"
+      "2": "24"
+      "3": "36"
+      "4": "48"
+    "13":
+      "1": "13"
+      "2": "26"
+      "3": "39"
+      "4": "52"
+    "14":
+      "1": "14"
+      "2": "28"
+      "3": "42"
+      "4": "56"
+    "15":
+      "1": "15"
+      "2": "30"
+      "3": "45"
+      "4": "60"
+    "16":
+      "1": "16"
+      "2": "32"
+      "3": "48"
+      "4": "64"
+    "17":
+      "1": "17"
+      "2": "34"
+      "3": "51"
+      "4": "68"
+    "18":
+      "1": "18"
+      "2": "36"
+      "3": "54"
+      "4": "72"
+    "19":
+      "1": "19"
+      "2": "38"
+      "3": "57"
+      "4": "76"
+    "20":
+      "1": "20"
+      "2": "40"
+      "3": "60"
+      "4": "80"
+
 Conditions:
 
-  Node4:  !Equals [!Ref NumNodes, "4"]
-  Node5:  !Equals [!Ref NumNodes, "5"]
-  Node6:  !Equals [!Ref NumNodes, "6"]
-  Node7:  !Equals [!Ref NumNodes, "7"]
-  Node8:  !Equals [!Ref NumNodes, "8"]
-  Node9:  !Equals [!Ref NumNodes, "9"]
-  Node10: !Equals [!Ref NumNodes, "10"]
+  Ripple: !Equals ["A", "A"]
 
-  Float1: !Equals [!Ref NumIPs, "1"]
-  Float2: !Equals [!Ref NumIPs, "2"]
-  Float3: !Equals [!Ref NumIPs, "3"]
-  Float4: !Equals [!Ref NumIPs, "4"]
-
-  Provision5:  !Or [!And [Condition: Node5,  Condition: Float1],                                             Condition: Provision6]
-  Provision6:  !Or [!And [Condition: Node6,  Condition: Float1],                                             Condition: Provision7]
-  Provision7:  !Or [!And [Condition: Node7,  Condition: Float1],                                             Condition: Provision8]
-  Provision8:  !Or [!And [Condition: Node8,  Condition: Float1], !And [Condition: Node4, Condition: Float2], Condition: Provision9]
-  Provision9:  !Or [!And [Condition: Node9,  Condition: Float1],                                             Condition: Provision10]
-  Provision10: !Or [!And [Condition: Node10, Condition: Float1], !And [Condition: Node5, Condition: Float2], Condition: Provision12]
-  Provision12: !Or [!And [Condition: Node6,  Condition: Float2], !And [Condition: Node4, Condition: Float3], Condition: Provision14]
-  Provision14: !Or [!And [Condition: Node7,  Condition: Float2],                                             Condition: Provision15]
-  Provision15: !Or [!And [Condition: Node5,  Condition: Float3],                                             Condition: Provision16]
-  Provision16: !Or [!And [Condition: Node8,  Condition: Float2], !And [Condition: Node4, Condition: Float4], Condition: Provision18]
-  Provision18: !Or [!And [Condition: Node9,  Condition: Float2], !And [Condition: Node6, Condition: Float3], Condition: Provision20]
-  Provision20: !Or [!And [Condition: Node10, Condition: Float2], !And [Condition: Node5, Condition: Float4], Condition: Provision21]
-  Provision21: !Or [!And [Condition: Node7,  Condition: Float3],                                             Condition: Provision24]
-  Provision24: !Or [!And [Condition: Node8,  Condition: Float3], !And [Condition: Node6, Condition: Float4], Condition: Provision27]
-  Provision27: !Or [!And [Condition: Node9,  Condition: Float3],                                             Condition: Provision28]
-  Provision28: !Or [!And [Condition: Node7,  Condition: Float4],                                             Condition: Provision30]
-  Provision30: !Or [!And [Condition: Node10, Condition: Float3],                                             Condition: Provision32]
-  Provision32: !Or [!And [Condition: Node8,  Condition: Float4],                                             Condition: Provision36]
-  Provision36: !Or [!And [Condition: Node9,  Condition: Float4],                                             Condition: Provision40]
-  Provision40:      !And [Condition: Node10, Condition: Float4]
-
+  Provision5:  !Or  [!Equals [!FindInMap [FloatMap, !Ref NumNodes, !Ref NumIPs], "5"],  Condition: Provision6]
+  Provision6:  !Or  [!Equals [!FindInMap [FloatMap, !Ref NumNodes, !Ref NumIPs], "6"],  Condition: Provision7]
+  Provision7:  !Or  [!Equals [!FindInMap [FloatMap, !Ref NumNodes, !Ref NumIPs], "7"],  Condition: Provision8]
+  Provision8:  !Or  [!Equals [!FindInMap [FloatMap, !Ref NumNodes, !Ref NumIPs], "8"],  Condition: Provision9]
+  Provision9:  !Or  [!Equals [!FindInMap [FloatMap, !Ref NumNodes, !Ref NumIPs], "9"],  Condition: Provision10]
+  Provision10: !Or  [!Equals [!FindInMap [FloatMap, !Ref NumNodes, !Ref NumIPs], "10"], Condition: Provision11]
+  Provision11: !Or  [!Equals [!FindInMap [FloatMap, !Ref NumNodes, !Ref NumIPs], "11"], Condition: Provision12]
+  Provision12: !Or  [!Equals [!FindInMap [FloatMap, !Ref NumNodes, !Ref NumIPs], "12"], Condition: Provision13]
+  Provision13: !Or  [!Equals [!FindInMap [FloatMap, !Ref NumNodes, !Ref NumIPs], "13"], Condition: Provision14]
+  Provision14: !Or  [!Equals [!FindInMap [FloatMap, !Ref NumNodes, !Ref NumIPs], "14"], Condition: Provision15]
+  Provision15: !Or  [!Equals [!FindInMap [FloatMap, !Ref NumNodes, !Ref NumIPs], "15"], Condition: Provision16]
+  Provision16: !Or  [!Equals [!FindInMap [FloatMap, !Ref NumNodes, !Ref NumIPs], "16"], Condition: Provision17]
+  Provision17: !Or  [!Equals [!FindInMap [FloatMap, !Ref NumNodes, !Ref NumIPs], "17"], Condition: Provision18]
+  Provision18: !Or  [!Equals [!FindInMap [FloatMap, !Ref NumNodes, !Ref NumIPs], "18"], Condition: Provision19]
+  Provision19: !Or  [!Equals [!FindInMap [FloatMap, !Ref NumNodes, !Ref NumIPs], "19"], Condition: Provision20]
+  Provision20: !Or  [!Equals [!FindInMap [FloatMap, !Ref NumNodes, !Ref NumIPs], "20"], Condition: Provision21]
+  Provision21: !Or  [!Equals [!FindInMap [FloatMap, !Ref NumNodes, !Ref NumIPs], "21"], Condition: Provision22]
+  Provision22: !Or  [!Equals [!FindInMap [FloatMap, !Ref NumNodes, !Ref NumIPs], "22"], Condition: Provision23]
+  Provision23: !And [Condition: Ripple,                                                 Condition: Provision24]
+  Provision24: !Or  [!Equals [!FindInMap [FloatMap, !Ref NumNodes, !Ref NumIPs], "24"], Condition: Provision25]
+  Provision25: !And [Condition: Ripple,                                                 Condition: Provision26]
+  Provision26: !Or  [!Equals [!FindInMap [FloatMap, !Ref NumNodes, !Ref NumIPs], "26"], Condition: Provision27]
+  Provision27: !Or  [!Equals [!FindInMap [FloatMap, !Ref NumNodes, !Ref NumIPs], "27"], Condition: Provision28]
+  Provision28: !Or  [!Equals [!FindInMap [FloatMap, !Ref NumNodes, !Ref NumIPs], "28"], Condition: Provision29]
+  Provision29: !And [Condition: Ripple,                                                 Condition: Provision30]
+  Provision30: !Or  [!Equals [!FindInMap [FloatMap, !Ref NumNodes, !Ref NumIPs], "30"], Condition: Provision31]
+  Provision31: !And [Condition: Ripple,                                                 Condition: Provision32]
+  Provision32: !Or  [!Equals [!FindInMap [FloatMap, !Ref NumNodes, !Ref NumIPs], "32"], Condition: Provision33]
+  Provision33: !Or  [!Equals [!FindInMap [FloatMap, !Ref NumNodes, !Ref NumIPs], "33"], Condition: Provision34]
+  Provision34: !Or  [!Equals [!FindInMap [FloatMap, !Ref NumNodes, !Ref NumIPs], "34"], Condition: Provision35]
+  Provision35: !And [Condition: Ripple,                                                 Condition: Provision36]
+  Provision36: !Or  [!Equals [!FindInMap [FloatMap, !Ref NumNodes, !Ref NumIPs], "36"], Condition: Provision37]
+  Provision37: !And [Condition: Ripple,                                                 Condition: Provision38]
+  Provision38: !Or  [!Equals [!FindInMap [FloatMap, !Ref NumNodes, !Ref NumIPs], "38"], Condition: Provision39]
+  Provision39: !Or  [!Equals [!FindInMap [FloatMap, !Ref NumNodes, !Ref NumIPs], "39"], Condition: Provision40]
+  Provision40: !Or  [!Equals [!FindInMap [FloatMap, !Ref NumNodes, !Ref NumIPs], "40"], Condition: Provision41]
+  Provision41: !And [Condition: Ripple,                                                 Condition: Provision42]
+  Provision42: !Or  [!Equals [!FindInMap [FloatMap, !Ref NumNodes, !Ref NumIPs], "42"], Condition: Provision43]
+  Provision43: !And [Condition: Ripple,                                                 Condition: Provision44]
+  Provision44: !Or  [!Equals [!FindInMap [FloatMap, !Ref NumNodes, !Ref NumIPs], "44"], Condition: Provision45]
+  Provision45: !Or  [!Equals [!FindInMap [FloatMap, !Ref NumNodes, !Ref NumIPs], "45"], Condition: Provision46]
+  Provision46: !And [Condition: Ripple,                                                 Condition: Provision47]
+  Provision47: !And [Condition: Ripple,                                                 Condition: Provision48]
+  Provision48: !Or  [!Equals [!FindInMap [FloatMap, !Ref NumNodes, !Ref NumIPs], "48"], Condition: Provision49]
+  Provision49: !And [Condition: Ripple,                                                 Condition: Provision50]
+  Provision50: !And [Condition: Ripple,                                                 Condition: Provision51]
+  Provision51: !Or  [!Equals [!FindInMap [FloatMap, !Ref NumNodes, !Ref NumIPs], "51"], Condition: Provision52]
+  Provision52: !Or  [!Equals [!FindInMap [FloatMap, !Ref NumNodes, !Ref NumIPs], "52"], Condition: Provision53]
+  Provision53: !And [Condition: Ripple,                                                 Condition: Provision54]
+  Provision54: !Or  [!Equals [!FindInMap [FloatMap, !Ref NumNodes, !Ref NumIPs], "54"], Condition: Provision55]
+  Provision55: !And [Condition: Ripple,                                                 Condition: Provision56]
+  Provision56: !Or  [!Equals [!FindInMap [FloatMap, !Ref NumNodes, !Ref NumIPs], "56"], Condition: Provision57]
+  Provision57: !Or  [!Equals [!FindInMap [FloatMap, !Ref NumNodes, !Ref NumIPs], "57"], Condition: Provision58]
+  Provision58: !And [Condition: Ripple,                                                 Condition: Provision59]
+  Provision59: !And [Condition: Ripple,                                                 Condition: Provision60]
+  Provision60: !Or  [!Equals [!FindInMap [FloatMap, !Ref NumNodes, !Ref NumIPs], "60"], Condition: Provision61]
+  Provision61: !And [Condition: Ripple,                                                 Condition: Provision62]
+  Provision62: !And [Condition: Ripple,                                                 Condition: Provision63]
+  Provision63: !And [Condition: Ripple,                                                 Condition: Provision64]
+  Provision64: !Or  [!Equals [!FindInMap [FloatMap, !Ref NumNodes, !Ref NumIPs], "64"], Condition: Provision65]
+  Provision65: !And [Condition: Ripple,                                                 Condition: Provision66]
+  Provision66: !And [Condition: Ripple,                                                 Condition: Provision67]
+  Provision67: !And [Condition: Ripple,                                                 Condition: Provision68]
+  Provision68: !Or  [!Equals [!FindInMap [FloatMap, !Ref NumNodes, !Ref NumIPs], "68"], Condition: Provision69]
+  Provision69: !And [Condition: Ripple,                                                 Condition: Provision70]
+  Provision70: !And [Condition: Ripple,                                                 Condition: Provision71]
+  Provision71: !And [Condition: Ripple,                                                 Condition: Provision72]
+  Provision72: !Or  [!Equals [!FindInMap [FloatMap, !Ref NumNodes, !Ref NumIPs], "72"], Condition: Provision73]
+  Provision73: !And [Condition: Ripple,                                                 Condition: Provision74]
+  Provision74: !And [Condition: Ripple,                                                 Condition: Provision75]
+  Provision75: !And [Condition: Ripple,                                                 Condition: Provision76]
+  Provision76: !Or  [!Equals [!FindInMap [FloatMap, !Ref NumNodes, !Ref NumIPs], "76"], Condition: Provision77]
+  Provision77: !And [Condition: Ripple,                                                 Condition: Provision78]
+  Provision78: !And [Condition: Ripple,                                                 Condition: Provision79]
+  Provision79: !And [Condition: Ripple,                                                 Condition: Provision80]
+  Provision80:       !Equals [!FindInMap [FloatMap, !Ref NumNodes, !Ref NumIPs], "80"]
 
 Resources:
   DNSZone: 
@@ -189,7 +321,7 @@ Resources:
             Weight: "0"
           - !Ref AWS::NoValue
         - !If
-          - Provision12
+          - Provision11
           - Name: !Sub "${RecordName}.${FQDName}"
             ResourceRecords: 
               - !Select [10, !Split [", ", !Ref FloatIPs]]
@@ -209,7 +341,7 @@ Resources:
             Weight: "0"
           - !Ref AWS::NoValue
         - !If
-          - Provision14
+          - Provision13
           - Name: !Sub "${RecordName}.${FQDName}"
             ResourceRecords: 
               - !Select [12, !Split [", ", !Ref FloatIPs]]
@@ -249,7 +381,7 @@ Resources:
             Weight: "0"
           - !Ref AWS::NoValue
         - !If
-          - Provision18
+          - Provision17
           - Name: !Sub "${RecordName}.${FQDName}"
             ResourceRecords: 
               - !Select [16, !Split [", ", !Ref FloatIPs]]
@@ -269,7 +401,7 @@ Resources:
             Weight: "0"
           - !Ref AWS::NoValue
         - !If
-          - Provision20
+          - Provision19
           - Name: !Sub "${RecordName}.${FQDName}"
             ResourceRecords: 
               - !Select [18, !Split [", ", !Ref FloatIPs]]
@@ -299,7 +431,7 @@ Resources:
             Weight: "0"
           - !Ref AWS::NoValue
         - !If
-          - Provision24
+          - Provision22
           - Name: !Sub "${RecordName}.${FQDName}"
             ResourceRecords: 
               - !Select [21, !Split [", ", !Ref FloatIPs]]
@@ -309,7 +441,7 @@ Resources:
             Weight: "0"
           - !Ref AWS::NoValue
         - !If
-          - Provision24
+          - Provision23
           - Name: !Sub "${RecordName}.${FQDName}"
             ResourceRecords: 
               - !Select [22, !Split [", ", !Ref FloatIPs]]
@@ -329,7 +461,7 @@ Resources:
             Weight: "0"
           - !Ref AWS::NoValue
         - !If
-          - Provision27
+          - Provision25
           - Name: !Sub "${RecordName}.${FQDName}"
             ResourceRecords: 
               - !Select [24, !Split [", ", !Ref FloatIPs]]
@@ -339,7 +471,7 @@ Resources:
             Weight: "0"
           - !Ref AWS::NoValue
         - !If
-          - Provision27
+          - Provision26
           - Name: !Sub "${RecordName}.${FQDName}"
             ResourceRecords: 
               - !Select [25, !Split [", ", !Ref FloatIPs]]
@@ -369,7 +501,7 @@ Resources:
             Weight: "0"
           - !Ref AWS::NoValue
         - !If
-          - Provision30
+          - Provision29
           - Name: !Sub "${RecordName}.${FQDName}"
             ResourceRecords: 
               - !Select [28, !Split [", ", !Ref FloatIPs]]
@@ -389,7 +521,7 @@ Resources:
             Weight: "0"
           - !Ref AWS::NoValue
         - !If
-          - Provision32
+          - Provision31
           - Name: !Sub "${RecordName}.${FQDName}"
             ResourceRecords: 
               - !Select [30, !Split [", ", !Ref FloatIPs]]
@@ -409,7 +541,7 @@ Resources:
             Weight: "0"
           - !Ref AWS::NoValue
         - !If
-          - Provision36
+          - Provision33
           - Name: !Sub "${RecordName}.${FQDName}"
             ResourceRecords: 
               - !Select [32, !Split [", ", !Ref FloatIPs]]
@@ -419,7 +551,7 @@ Resources:
             Weight: "0"
           - !Ref AWS::NoValue
         - !If
-          - Provision36
+          - Provision34
           - Name: !Sub "${RecordName}.${FQDName}"
             ResourceRecords: 
               - !Select [33, !Split [", ", !Ref FloatIPs]]
@@ -429,7 +561,7 @@ Resources:
             Weight: "0"
           - !Ref AWS::NoValue
         - !If
-          - Provision36
+          - Provision35
           - Name: !Sub "${RecordName}.${FQDName}"
             ResourceRecords: 
               - !Select [34, !Split [", ", !Ref FloatIPs]]
@@ -449,7 +581,7 @@ Resources:
             Weight: "0"
           - !Ref AWS::NoValue
         - !If
-          - Provision40
+          - Provision37
           - Name: !Sub "${RecordName}.${FQDName}"
             ResourceRecords: 
               - !Select [36, !Split [", ", !Ref FloatIPs]]
@@ -459,7 +591,7 @@ Resources:
             Weight: "0"
           - !Ref AWS::NoValue
         - !If
-          - Provision40
+          - Provision38
           - Name: !Sub "${RecordName}.${FQDName}"
             ResourceRecords: 
               - !Select [37, !Split [", ", !Ref FloatIPs]]
@@ -469,7 +601,7 @@ Resources:
             Weight: "0"
           - !Ref AWS::NoValue
         - !If
-          - Provision40
+          - Provision39
           - Name: !Sub "${RecordName}.${FQDName}"
             ResourceRecords: 
               - !Select [38, !Split [", ", !Ref FloatIPs]]
@@ -488,6 +620,407 @@ Resources:
             TTL: "0"
             Weight: "0"
           - !Ref AWS::NoValue
+        - !If
+          - Provision41
+          - Name: !Sub "${RecordName}.${FQDName}"
+            ResourceRecords: 
+              - !Select [40, !Split [", ", !Ref FloatIPs]]
+            SetIdentifier: "Qumulo FIP 41"
+            Type: A
+            TTL: "0"
+            Weight: "0"
+          - !Ref AWS::NoValue
+        - !If
+          - Provision42
+          - Name: !Sub "${RecordName}.${FQDName}"
+            ResourceRecords: 
+              - !Select [41, !Split [", ", !Ref FloatIPs]]
+            SetIdentifier: "Qumulo FIP 42"
+            Type: A
+            TTL: "0"
+            Weight: "0"
+          - !Ref AWS::NoValue
+        - !If
+          - Provision43
+          - Name: !Sub "${RecordName}.${FQDName}"
+            ResourceRecords: 
+              - !Select [42, !Split [", ", !Ref FloatIPs]]
+            SetIdentifier: "Qumulo FIP 43"
+            Type: A
+            TTL: "0"
+            Weight: "0"
+          - !Ref AWS::NoValue
+        - !If
+          - Provision44
+          - Name: !Sub "${RecordName}.${FQDName}"
+            ResourceRecords: 
+              - !Select [43, !Split [", ", !Ref FloatIPs]]
+            SetIdentifier: "Qumulo FIP 44"
+            Type: A
+            TTL: "0"
+            Weight: "0"
+          - !Ref AWS::NoValue
+        - !If
+          - Provision45
+          - Name: !Sub "${RecordName}.${FQDName}"
+            ResourceRecords: 
+              - !Select [44, !Split [", ", !Ref FloatIPs]]
+            SetIdentifier: "Qumulo FIP 45"
+            Type: A
+            TTL: "0"
+            Weight: "0"
+          - !Ref AWS::NoValue
+        - !If
+          - Provision46
+          - Name: !Sub "${RecordName}.${FQDName}"
+            ResourceRecords: 
+              - !Select [45, !Split [", ", !Ref FloatIPs]]
+            SetIdentifier: "Qumulo FIP 46"
+            Type: A
+            TTL: "0"
+            Weight: "0"
+          - !Ref AWS::NoValue
+        - !If
+          - Provision47
+          - Name: !Sub "${RecordName}.${FQDName}"
+            ResourceRecords: 
+              - !Select [46, !Split [", ", !Ref FloatIPs]]
+            SetIdentifier: "Qumulo FIP 47"
+            Type: A
+            TTL: "0"
+            Weight: "0"
+          - !Ref AWS::NoValue
+        - !If
+          - Provision48
+          - Name: !Sub "${RecordName}.${FQDName}"
+            ResourceRecords: 
+              - !Select [47, !Split [", ", !Ref FloatIPs]]
+            SetIdentifier: "Qumulo FIP 48"
+            Type: A
+            TTL: "0"
+            Weight: "0"
+          - !Ref AWS::NoValue
+        - !If
+          - Provision49
+          - Name: !Sub "${RecordName}.${FQDName}"
+            ResourceRecords: 
+              - !Select [48, !Split [", ", !Ref FloatIPs]]
+            SetIdentifier: "Qumulo FIP 49"
+            Type: A
+            TTL: "0"
+            Weight: "0"
+          - !Ref AWS::NoValue
+        - !If
+          - Provision50
+          - Name: !Sub "${RecordName}.${FQDName}"
+            ResourceRecords: 
+              - !Select [49, !Split [", ", !Ref FloatIPs]]
+            SetIdentifier: "Qumulo FIP 50"
+            Type: A
+            TTL: "0"
+            Weight: "0"
+          - !Ref AWS::NoValue
+        - !If
+          - Provision51
+          - Name: !Sub "${RecordName}.${FQDName}"
+            ResourceRecords: 
+              - !Select [50, !Split [", ", !Ref FloatIPs]]
+            SetIdentifier: "Qumulo FIP 51"
+            Type: A
+            TTL: "0"
+            Weight: "0"
+          - !Ref AWS::NoValue
+        - !If
+          - Provision52
+          - Name: !Sub "${RecordName}.${FQDName}"
+            ResourceRecords: 
+              - !Select [51, !Split [", ", !Ref FloatIPs]]
+            SetIdentifier: "Qumulo FIP 52"
+            Type: A
+            TTL: "0"
+            Weight: "0"
+          - !Ref AWS::NoValue
+        - !If
+          - Provision53
+          - Name: !Sub "${RecordName}.${FQDName}"
+            ResourceRecords: 
+              - !Select [52, !Split [", ", !Ref FloatIPs]]
+            SetIdentifier: "Qumulo FIP 53"
+            Type: A
+            TTL: "0"
+            Weight: "0"
+          - !Ref AWS::NoValue
+        - !If
+          - Provision54
+          - Name: !Sub "${RecordName}.${FQDName}"
+            ResourceRecords: 
+              - !Select [53, !Split [", ", !Ref FloatIPs]]
+            SetIdentifier: "Qumulo FIP 54"
+            Type: A
+            TTL: "0"
+            Weight: "0"
+          - !Ref AWS::NoValue
+        - !If
+          - Provision55
+          - Name: !Sub "${RecordName}.${FQDName}"
+            ResourceRecords: 
+              - !Select [54, !Split [", ", !Ref FloatIPs]]
+            SetIdentifier: "Qumulo FIP 55"
+            Type: A
+            TTL: "0"
+            Weight: "0"
+          - !Ref AWS::NoValue
+        - !If
+          - Provision56
+          - Name: !Sub "${RecordName}.${FQDName}"
+            ResourceRecords: 
+              - !Select [55, !Split [", ", !Ref FloatIPs]]
+            SetIdentifier: "Qumulo FIP 56"
+            Type: A
+            TTL: "0"
+            Weight: "0"
+          - !Ref AWS::NoValue
+        - !If
+          - Provision57
+          - Name: !Sub "${RecordName}.${FQDName}"
+            ResourceRecords: 
+              - !Select [56, !Split [", ", !Ref FloatIPs]]
+            SetIdentifier: "Qumulo FIP 57"
+            Type: A
+            TTL: "0"
+            Weight: "0"
+          - !Ref AWS::NoValue
+        - !If
+          - Provision58
+          - Name: !Sub "${RecordName}.${FQDName}"
+            ResourceRecords: 
+              - !Select [57, !Split [", ", !Ref FloatIPs]]
+            SetIdentifier: "Qumulo FIP 58"
+            Type: A
+            TTL: "0"
+            Weight: "0"
+          - !Ref AWS::NoValue
+        - !If
+          - Provision59
+          - Name: !Sub "${RecordName}.${FQDName}"
+            ResourceRecords: 
+              - !Select [58, !Split [", ", !Ref FloatIPs]]
+            SetIdentifier: "Qumulo FIP 59"
+            Type: A
+            TTL: "0"
+            Weight: "0"
+          - !Ref AWS::NoValue
+        - !If
+          - Provision60
+          - Name: !Sub "${RecordName}.${FQDName}"
+            ResourceRecords: 
+              - !Select [59, !Split [", ", !Ref FloatIPs]]
+            SetIdentifier: "Qumulo FIP 60"
+            Type: A
+            TTL: "0"
+            Weight: "0"
+          - !Ref AWS::NoValue
+        - !If
+          - Provision61
+          - Name: !Sub "${RecordName}.${FQDName}"
+            ResourceRecords: 
+              - !Select [60, !Split [", ", !Ref FloatIPs]]
+            SetIdentifier: "Qumulo FIP 61"
+            Type: A
+            TTL: "0"
+            Weight: "0"
+          - !Ref AWS::NoValue
+        - !If
+          - Provision62
+          - Name: !Sub "${RecordName}.${FQDName}"
+            ResourceRecords: 
+              - !Select [61, !Split [", ", !Ref FloatIPs]]
+            SetIdentifier: "Qumulo FIP 62"
+            Type: A
+            TTL: "0"
+            Weight: "0"
+          - !Ref AWS::NoValue
+        - !If
+          - Provision63
+          - Name: !Sub "${RecordName}.${FQDName}"
+            ResourceRecords: 
+              - !Select [62, !Split [", ", !Ref FloatIPs]]
+            SetIdentifier: "Qumulo FIP 63"
+            Type: A
+            TTL: "0"
+            Weight: "0"
+          - !Ref AWS::NoValue
+        - !If
+          - Provision64
+          - Name: !Sub "${RecordName}.${FQDName}"
+            ResourceRecords: 
+              - !Select [63, !Split [", ", !Ref FloatIPs]]
+            SetIdentifier: "Qumulo FIP 64"
+            Type: A
+            TTL: "0"
+            Weight: "0"
+          - !Ref AWS::NoValue
+        - !If
+          - Provision65
+          - Name: !Sub "${RecordName}.${FQDName}"
+            ResourceRecords: 
+              - !Select [64, !Split [", ", !Ref FloatIPs]]
+            SetIdentifier: "Qumulo FIP 65"
+            Type: A
+            TTL: "0"
+            Weight: "0"
+          - !Ref AWS::NoValue
+        - !If
+          - Provision66
+          - Name: !Sub "${RecordName}.${FQDName}"
+            ResourceRecords: 
+              - !Select [65, !Split [", ", !Ref FloatIPs]]
+            SetIdentifier: "Qumulo FIP 66"
+            Type: A
+            TTL: "0"
+            Weight: "0"
+          - !Ref AWS::NoValue
+        - !If
+          - Provision67
+          - Name: !Sub "${RecordName}.${FQDName}"
+            ResourceRecords: 
+              - !Select [66, !Split [", ", !Ref FloatIPs]]
+            SetIdentifier: "Qumulo FIP 67"
+            Type: A
+            TTL: "0"
+            Weight: "0"
+          - !Ref AWS::NoValue
+        - !If
+          - Provision68
+          - Name: !Sub "${RecordName}.${FQDName}"
+            ResourceRecords: 
+              - !Select [67, !Split [", ", !Ref FloatIPs]]
+            SetIdentifier: "Qumulo FIP 68"
+            Type: A
+            TTL: "0"
+            Weight: "0"
+          - !Ref AWS::NoValue
+        - !If
+          - Provision69
+          - Name: !Sub "${RecordName}.${FQDName}"
+            ResourceRecords: 
+              - !Select [68, !Split [", ", !Ref FloatIPs]]
+            SetIdentifier: "Qumulo FIP 69"
+            Type: A
+            TTL: "0"
+            Weight: "0"
+          - !Ref AWS::NoValue
+        - !If
+          - Provision70
+          - Name: !Sub "${RecordName}.${FQDName}"
+            ResourceRecords: 
+              - !Select [69, !Split [", ", !Ref FloatIPs]]
+            SetIdentifier: "Qumulo FIP 70"
+            Type: A
+            TTL: "0"
+            Weight: "0"
+          - !Ref AWS::NoValue
+        - !If
+          - Provision71
+          - Name: !Sub "${RecordName}.${FQDName}"
+            ResourceRecords: 
+              - !Select [70, !Split [", ", !Ref FloatIPs]]
+            SetIdentifier: "Qumulo FIP 71"
+            Type: A
+            TTL: "0"
+            Weight: "0"
+          - !Ref AWS::NoValue
+        - !If
+          - Provision72
+          - Name: !Sub "${RecordName}.${FQDName}"
+            ResourceRecords: 
+              - !Select [71, !Split [", ", !Ref FloatIPs]]
+            SetIdentifier: "Qumulo FIP 72"
+            Type: A
+            TTL: "0"
+            Weight: "0"
+          - !Ref AWS::NoValue
+        - !If
+          - Provision73
+          - Name: !Sub "${RecordName}.${FQDName}"
+            ResourceRecords: 
+              - !Select [72, !Split [", ", !Ref FloatIPs]]
+            SetIdentifier: "Qumulo FIP 73"
+            Type: A
+            TTL: "0"
+            Weight: "0"
+          - !Ref AWS::NoValue
+        - !If
+          - Provision74
+          - Name: !Sub "${RecordName}.${FQDName}"
+            ResourceRecords: 
+              - !Select [73, !Split [", ", !Ref FloatIPs]]
+            SetIdentifier: "Qumulo FIP 74"
+            Type: A
+            TTL: "0"
+            Weight: "0"
+          - !Ref AWS::NoValue
+        - !If
+          - Provision75
+          - Name: !Sub "${RecordName}.${FQDName}"
+            ResourceRecords: 
+              - !Select [74, !Split [", ", !Ref FloatIPs]]
+            SetIdentifier: "Qumulo FIP 75"
+            Type: A
+            TTL: "0"
+            Weight: "0"
+          - !Ref AWS::NoValue
+        - !If
+          - Provision76
+          - Name: !Sub "${RecordName}.${FQDName}"
+            ResourceRecords: 
+              - !Select [75, !Split [", ", !Ref FloatIPs]]
+            SetIdentifier: "Qumulo FIP 76"
+            Type: A
+            TTL: "0"
+            Weight: "0"
+          - !Ref AWS::NoValue
+        - !If
+          - Provision77
+          - Name: !Sub "${RecordName}.${FQDName}"
+            ResourceRecords: 
+              - !Select [76, !Split [", ", !Ref FloatIPs]]
+            SetIdentifier: "Qumulo FIP 77"
+            Type: A
+            TTL: "0"
+            Weight: "0"
+          - !Ref AWS::NoValue
+        - !If
+          - Provision78
+          - Name: !Sub "${RecordName}.${FQDName}"
+            ResourceRecords: 
+              - !Select [77, !Split [", ", !Ref FloatIPs]]
+            SetIdentifier: "Qumulo FIP 78"
+            Type: A
+            TTL: "0"
+            Weight: "0"
+          - !Ref AWS::NoValue
+        - !If
+          - Provision79
+          - Name: !Sub "${RecordName}.${FQDName}"
+            ResourceRecords: 
+              - !Select [78, !Split [", ", !Ref FloatIPs]]
+            SetIdentifier: "Qumulo FIP 79"
+            Type: A
+            TTL: "0"
+            Weight: "0"
+          - !Ref AWS::NoValue
+        - !If
+          - Provision80
+          - Name: !Sub "${RecordName}.${FQDName}"
+            ResourceRecords: 
+              - !Select [79, !Split [", ", !Ref FloatIPs]]
+            SetIdentifier: "Qumulo FIP 80"
+            Type: A
+            TTL: "0"
+            Weight: "0"
+          - !Ref AWS::NoValue
+
           
 Outputs:
   ClusterDNS:

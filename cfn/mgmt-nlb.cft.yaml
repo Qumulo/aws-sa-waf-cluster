@@ -37,12 +37,22 @@ Parameters:
     Type: String
 
 Conditions:
-  Provision5:  !Or [!Equals [!Ref NumNodes, "5"], Condition: Provision6]
-  Provision6:  !Or [!Equals [!Ref NumNodes, "6"], Condition: Provision7]
-  Provision7:  !Or [!Equals [!Ref NumNodes, "7"], Condition: Provision8]
-  Provision8:  !Or [!Equals [!Ref NumNodes, "8"], Condition: Provision9]
-  Provision9:  !Or [!Equals [!Ref NumNodes, "9"], Condition: Provision10]
-  Provision10:      !Equals [!Ref NumNodes, "10"]
+  Provision5:   !Or [!Equals [!Ref NumNodes, "5"],  Condition: Provision6]
+  Provision6:   !Or [!Equals [!Ref NumNodes, "6"],  Condition: Provision7]
+  Provision7:   !Or [!Equals [!Ref NumNodes, "7"],  Condition: Provision8]
+  Provision8:   !Or [!Equals [!Ref NumNodes, "8"],  Condition: Provision9]
+  Provision9:   !Or [!Equals [!Ref NumNodes, "9"],  Condition: Provision10]
+  Provision10:  !Or [!Equals [!Ref NumNodes, "10"], Condition: Provision11]
+  Provision11:  !Or [!Equals [!Ref NumNodes, "11"], Condition: Provision12]
+  Provision12:  !Or [!Equals [!Ref NumNodes, "12"], Condition: Provision13]
+  Provision13:  !Or [!Equals [!Ref NumNodes, "13"], Condition: Provision14]
+  Provision14:  !Or [!Equals [!Ref NumNodes, "14"], Condition: Provision15]
+  Provision15:  !Or [!Equals [!Ref NumNodes, "15"], Condition: Provision16]
+  Provision16:  !Or [!Equals [!Ref NumNodes, "16"], Condition: Provision17]
+  Provision17:  !Or [!Equals [!Ref NumNodes, "17"], Condition: Provision18]
+  Provision18:  !Or [!Equals [!Ref NumNodes, "18"], Condition: Provision19]
+  Provision19:  !Or [!Equals [!Ref NumNodes, "19"], Condition: Provision20]
+  Provision20:       !Equals [!Ref NumNodes, "20"]
 
   ProvRepl: !Not
     - !Equals
@@ -136,6 +146,56 @@ Resources:
           - Id: !Select [9, !Split [", ", !Ref NodeIPs]]
             Port: 443
           - !Ref AWS::NoValue
+        - !If
+          - Provision11
+          - Id: !Select [10, !Split [", ", !Ref NodeIPs]]
+            Port: 443
+          - !Ref AWS::NoValue
+        - !If
+          - Provision12
+          - Id: !Select [11, !Split [", ", !Ref NodeIPs]]
+            Port: 443
+          - !Ref AWS::NoValue
+        - !If
+          - Provision13
+          - Id: !Select [12, !Split [", ", !Ref NodeIPs]]
+            Port: 443
+          - !Ref AWS::NoValue
+        - !If
+          - Provision14
+          - Id: !Select [13, !Split [", ", !Ref NodeIPs]]
+            Port: 443
+          - !Ref AWS::NoValue
+        - !If
+          - Provision15
+          - Id: !Select [14, !Split [", ", !Ref NodeIPs]]
+            Port: 443
+          - !Ref AWS::NoValue
+        - !If
+          - Provision16
+          - Id: !Select [15, !Split [", ", !Ref NodeIPs]]
+            Port: 443
+          - !Ref AWS::NoValue
+        - !If
+          - Provision17
+          - Id: !Select [16, !Split [", ", !Ref NodeIPs]]
+            Port: 443
+          - !Ref AWS::NoValue
+        - !If
+          - Provision18
+          - Id: !Select [17, !Split [", ", !Ref NodeIPs]]
+            Port: 443
+          - !Ref AWS::NoValue
+        - !If
+          - Provision19
+          - Id: !Select [18, !Split [", ", !Ref NodeIPs]]
+            Port: 443
+          - !Ref AWS::NoValue
+        - !If
+          - Provision20
+          - Id: !Select [19, !Split [", ", !Ref NodeIPs]]
+            Port: 443
+          - !Ref AWS::NoValue
       VpcId: !Ref VPCID
 
   NLBTargetGroupRepl:
@@ -191,6 +251,56 @@ Resources:
         - !If
           - Provision10
           - Id: !Select [9, !Split [", ", !Ref NodeIPs]]
+            Port: 3712
+          - !Ref AWS::NoValue
+        - !If
+          - Provision11
+          - Id: !Select [10, !Split [", ", !Ref NodeIPs]]
+            Port: 3712
+          - !Ref AWS::NoValue
+        - !If
+          - Provision12
+          - Id: !Select [11, !Split [", ", !Ref NodeIPs]]
+            Port: 3712
+          - !Ref AWS::NoValue
+        - !If
+          - Provision13
+          - Id: !Select [12, !Split [", ", !Ref NodeIPs]]
+            Port: 3712
+          - !Ref AWS::NoValue
+        - !If
+          - Provision14
+          - Id: !Select [13, !Split [", ", !Ref NodeIPs]]
+            Port: 3712
+          - !Ref AWS::NoValue
+        - !If
+          - Provision15
+          - Id: !Select [14, !Split [", ", !Ref NodeIPs]]
+            Port: 3712
+          - !Ref AWS::NoValue
+        - !If
+          - Provision16
+          - Id: !Select [15, !Split [", ", !Ref NodeIPs]]
+            Port: 3712
+          - !Ref AWS::NoValue
+        - !If
+          - Provision17
+          - Id: !Select [16, !Split [", ", !Ref NodeIPs]]
+            Port: 3712
+          - !Ref AWS::NoValue
+        - !If
+          - Provision18
+          - Id: !Select [17, !Split [", ", !Ref NodeIPs]]
+            Port: 3712
+          - !Ref AWS::NoValue
+        - !If
+          - Provision19
+          - Id: !Select [18, !Split [", ", !Ref NodeIPs]]
+            Port: 3712
+          - !Ref AWS::NoValue
+        - !If
+          - Provision20
+          - Id: !Select [19, !Split [", ", !Ref NodeIPs]]
             Port: 3712
           - !Ref AWS::NoValue
       VpcId: !Ref VPCID

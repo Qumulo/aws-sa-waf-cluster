@@ -1,16 +1,15 @@
 [![Qumulo Logo](https://qumulo.com/wp-content/uploads/2021/06/CloudQ-Logo_OnLight.png)](http://qumulo.com)
 
 # aws-sa-waf-cluster
-AWS CloudFormation templates to deploy a Qumulo cluster with one to 10 instances per the AWS Well Architected Framework.
-Supports usable capacities from 1TB to 3PB with all Qumulo Core features.
+AWS CloudFormation templates to deploy a Qumulo cluster with one to 20 instances per the AWS Well Architected Framework.
+Supports usable capacities from 1TB to 6PB with all Qumulo Core features.
 
 ## Requirements
 
-These templates require Qumulo AMIs with [Qumulo Core Cloud Software](https://qumulo.com/product/cloud-products/) version `>= 3.3.0`
+These templates deploy Qumulo AMIs with [Qumulo Core Cloud Software](https://qumulo.com/product/cloud-products/) version `>= 4.0.6`
 
-AMI IDs are also required that are configuration and region specific.
-You can find AMI IDs for the Qumulo Core Cloud Software on the [AWS Marketplace](https://aws.amazon.com/marketplace/search/results?x=0&y=0&searchTerms=qumulo)
-or by [Contacting Qumulo Sales](http://discover.qumulo.com/cloud-calc-contact.html).
+A subscription to an [AWS Marketplace](https://aws.amazon.com/marketplace/search/results?x=0&y=0&searchTerms=qumulo) offer is required.
+For private offers via the AWS Marketplace contact [Qumulo Sales](http://discover.qumulo.com/cloud-calc-contact.html).
 
 ## Usage
 
