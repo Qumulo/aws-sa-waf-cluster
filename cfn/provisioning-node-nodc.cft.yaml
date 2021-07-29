@@ -230,7 +230,7 @@ Resources:
             - - !Ref "AWS::StackName"
               - " - Qumulo Provisioning Node"
       ImageId: !Ref ProvisioningServerAMI
-      InstanceType: t3.large
+      InstanceType: m5.large
       InstanceInitiatedShutdownBehavior: stop
       IamInstanceProfile: !Ref ProvisionerProfile
       KeyName: !Ref KeyName
