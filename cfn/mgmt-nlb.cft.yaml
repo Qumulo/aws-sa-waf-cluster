@@ -76,7 +76,7 @@ Resources:
       Name: !Join
         - ""
         - - "qumulo-mgmt-"
-          - !Select [2, !Split ["-", !Ref "AWS::StackName"]]
+          - !Select [1, !Split ["-MGMTNLBSTACK-", !Ref "AWS::StackName"]]
       Type: network
       IpAddressType: ipv4
       Scheme: internet-facing
@@ -98,7 +98,7 @@ Resources:
       Name: !Join
         - ""
         - - "cluster-443-"
-          - !Select [2, !Split ["-", !Ref "AWS::StackName"]]
+          - !Select [1, !Split ["-MGMTNLBSTACK-", !Ref "AWS::StackName"]]
       TargetType: ip
       Protocol: TCP
       Port: 80
@@ -205,7 +205,7 @@ Resources:
       Name: !Join
         - ""
         - - "cluster-3712-"
-          - !Select [2, !Split ["-", !Ref "AWS::StackName"]]
+          - !Select [1, !Split ["-MGMTNLBSTACK-", !Ref "AWS::StackName"]]
       TargetType: ip
       Protocol: TCP
       Port: 80

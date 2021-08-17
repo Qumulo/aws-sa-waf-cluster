@@ -25,9 +25,11 @@ AWSTemplateFormatVersion: "2010-09-09"
 Description: This template instantiates an EC2 instance for configuration of the Qumulo Cluster and is then shutdown.  Floating IPs, Sidecar role and permissions, EBS Volume Tags, and CMK Policy management are all configured.
 
 Parameters:
-  SideCarProv:
-    Type: String
   ProvisioningServerAMI:
+    Description: "AWS Linux Server AMI"
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    Default: "/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2"
+  SideCarProv:
     Type: String
   SecretsManagedPolicy:
     Type: String
@@ -72,6 +74,8 @@ Parameters:
   QClusterName:
     Type: String
   QClusterVersion:
+    Type: String
+  TermProtection:
     Type: String
 
 Resources:
@@ -126,11 +130,10 @@ Resources:
               - Effect: Allow
                 Action:
                   - "s3:GetObject"
-                Resource: !Join
-                  - ""
-                  - - "arn:aws:s3:::"
-                    - !Ref BucketName
-                    - "/*"
+                  - "s3:ListObject"
+                Resource:
+                  - !Sub "arn:aws:s3:::${BucketName}/*"
+                  - !Sub "arn:aws:s3:::${BucketName}"                 
         - PolicyName: KMSAccessPolicy
           PolicyDocument:
             Version: "2012-10-17"
@@ -138,10 +141,12 @@ Resources:
               - Effect: Allow
                 Action:
                   - "cloudformation:SetStackPolicy"
+                  - "cloudformation:UpdateTerminationProtection"
                   - "ec2:DeleteTags"
                   - "ec2:CreateTags"
                   - "ec2:DescribeVolumes"
-                  - "ec2:DescribeInstances"                  
+                  - "ec2:DescribeInstances"   
+                  - "ec2:ModifyInstanceAttribute"               
                   - "iam:GenerateCredentialReport"
                   - "iam:List*"
                   - "iam:Get*"
@@ -220,6 +225,13 @@ Resources:
       Value: "null"
       Type: String
 
+  TerminationProtectionSSM: 
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub "/qumulo/${QStackName}/termination-protection"       
+      Value: "null"
+      Type: String      
+
   ProvisioningNode:
     Type: 'AWS::EC2::Instance'
     Properties:
@@ -271,33 +283,37 @@ Resources:
 
           #!/bin/bash -xe
           exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
-          #This user data runs every boot cycle for this Provisioner Instance     
+          #User data runs every boot cycle
 
           q_stackname="${QStackName}"
-          ssm_put="aws ssm put-parameter --region ${Region} --name /qumulo/$q_stackname"
-          ssm_get="aws ssm get-parameter --region ${Region} --name /qumulo/$q_stackname"
+          ssm_put="aws ssm put-parameter --region ${Region} --type String --overwrite --name /qumulo/$q_stackname"
+          ssm_get="aws ssm get-parameter --region ${Region} --output text --name /qumulo/$q_stackname"
 
-          if [ $(curl -sL -w "%{http_code}\\n" "google.com" -o /dev/null --connect-timeout 3 --max-time 5) == "200" ]; then 
-            $ssm_put/last-run-status --value "Public Internet Reachable" --type String --overwrite          
-          else 
-            $ssm_put/last-run-status --value "NO Public Internet Connectivity, resolve and reboot provisioning instance" --type String --overwrite          
+          if [ $(curl -sL -w "%{http_code}\\n" "trends.qumulo.com" -o /dev/null --connect-timeout 3 --max-time 5) == "200" ]; then
+            $ssm_put/last-run-status --value "BOOTED. Public Internet Reachable"
+            no_inet="false"
+          else
+            $ssm_put/last-run-status --value "BOOTED. NO Public Internet Connectivity. VPC Endpoints must be provisioned for AWS Services."
+            no_inet="true"
           fi
-          
+
+          $ssm_put/last-run-status --value "Installing jq, qq, and nginx if needed and reading secrets"
+
           if [[ -e "qq" ]]; then
-            echo "qq installed already"
+            echo "qq exists"
           else
             wget --no-check-certificate https://${Node1IP}/static/qq
-            chmod 777 ./qq                
+            chmod 777 ./qq
           fi
 
           if yum list installed "jq" >/dev/null 2>&1; then
-            echo "jq installed already"
+            echo "jq exists"
           else
             yum install -y jq
           fi
 
           if yum list installed "nginx.x86_64" >/dev/null 2>&1; then
-            echo "nginx installed already"
+            echo "nginx exists"
           else
             amazon-linux-extras install nginx1
           fi
@@ -314,51 +330,70 @@ Resources:
           cmk=${CMK}
           sc_prov="NO"
           cmk_prov="NO"
+          this_ec2=$(wget -q -O - http://169.254.169.254/latest/meta-data/instance-id)
 
-          sc_username=$(aws secretsmanager get-secret-value --secret-id $sc_secrets_arn --region ${Region} --query "SecretString" --output text | jq -r .username)
-          sc_password=$(aws secretsmanager get-secret-value --secret-id $sc_secrets_arn --region ${Region} --query "SecretString" --output text | jq -r .password)
-          admin_password=$(aws secretsmanager get-secret-value --secret-id ${ClusterSecretsArn} --region ${Region} --query "SecretString" --output text | jq -r .password)
-          software_password=$(aws secretsmanager get-secret-value --secret-id ${SoftwareSecretsArn} --region ${Region} --query "SecretString" --output text | jq -r .password | xxd -p -r)
-
-          $ssm_put/last-run-status --value "Downloaded and installed jq, qq, and nginx if needed and read secrets" --type String --overwrite          
+          get_sec="aws secretsmanager get-secret-value --region ${Region} --query "SecretString" --output text"
+          sc_username=$($get_sec --secret-id $sc_secrets_arn | jq -r .username)
+          sc_password=$($get_sec --secret-id $sc_secrets_arn | jq -r .password)
+          admin_password=$($get_sec --secret-id ${ClusterSecretsArn} | jq -r .password) 
+          software_password=$($get_sec --secret-id ${SoftwareSecretsArn} | jq -r .password | xxd -p -r)
 
           IFS=', ' read -r -a newIDs <<< "$instance_ids"
-          for m in "${!!newIDs[@]}"; do
-            state="null"
-            (( n = m + 1 ))
-              while [ "$state" != "running" ]; do
-                state=$(aws ec2 describe-instances --region ${Region} --filter "Name=instance-id, Values=${!newIDs[m]}" --query "Reservations[].Instances[].State.Name" --out "text")
-                echo "..Waiting for Node$n to start"
-              done
-            echo "--Node$n running"
-          done
+          cft_term="aws cloudformation update-termination-protection --region ${Region} --stack-name ${StackName}"
+          ec2_term="aws ec2 modify-instance-attribute --region ${Region} --instance-id"
+          term_state=$($ssm_get/termination-protection --query "Parameter.Value")
+          
+          if [ "$term_state" != "${TermProtection}" ]; then
+            $ssm_put/last-run-status --value "Updating Termination Protection. Enabled=${TermProtection}"
 
-          $qq_host version | grep "revision_id" > revision.txt
-          read revision < revision.txt
-          version_num=${!revision//[!0-9.]/}
+            if [ "${TermProtection}" == "YES" ]; then
+              $cft_term --enable-termination-protection
+              api_term=disable-api-termination
+            else
+              $cft_term --no-enable-termination-protection
+              api_term=no-disable-api-termination
+            fi 
 
-          $ssm_put/installed-version --value "$version_num" --type String --overwrite
+            for m in "${!!newIDs[@]}"; do
+              $ec2_term ${!newIDs[m]} --$api_term
+            done
+
+            $ec2_term $this_ec2 --$api_term
+
+            $ssm_put/termination-protection --value "${TermProtection}"
+          fi
+
+          $ssm_put/last-run-status --value "Checking quorum state and boot status"
 
           out_quorum=0
           in_quorum=0
           IFS=', ' read -r -a nodeIPs <<< "$node_ips"
           for m in "${!!nodeIPs[@]}"; do
+            until [ $(curl -sLk -w "%{http_code}\\n" "https://${!nodeIPs[m]}" -o /dev/null --connect-timeout 3 --max-time 5) == "200" ]; do
+              sleep 5
+              echo "Waiting for ${!nodeIPs[m]} to boot"
+            done
             quorum=$(./qq --host ${!nodeIPs[m]} node_state_get)
             if [[ "$quorum" != *"ACTIVE"* ]]; then
               (( out_quorum = out_quorum + 1 ))
             else
               (( in_quorum = in_quorum + 1 ))
             fi
-          done            
+          done
 
-          if [ $out_quorum -eq ${!#nodeIPs[@]} ] && [ $in_quorum -eq 0 ]; then                   
-            $ssm_put/last-run-status --value "All nodes out of quorum, NEW CLUSTER" --type String --overwrite
+          revision=$($qq_host version | grep "revision_id")
+          version_num=${!revision//[!0-9.]/}
+
+          $ssm_put/installed-version --value "$version_num"
+
+          if [ $out_quorum -eq ${!#nodeIPs[@]} ] && [ $in_quorum -eq 0 ]; then
+            $ssm_put/last-run-status --value "All nodes out of quorum, NEW CLUSTER"
 
             new_cluster="true"
 
             aws s3 cp s3://${BucketName}/${KeyPrefix}cfn-init/stack-policy.json /root/stack_policy.json
             aws cloudformation set-stack-policy --region ${Region} --stack-name $q_stackname --stack-policy-body file://root/stack_policy.json
-            $ssm_put/creation-version --value "$version_num" --type String --overwrite
+            $ssm_put/creation-version --value "$version_num"
 
             if [ "$version_num" != "${QClusterVersion}" ]; then
               new_version_num=${QClusterVersion}
@@ -367,29 +402,29 @@ Resources:
             IFS=', ' read -r -a upgradeIPs <<< "$node_ips"
             IFS=', ' read -r -a upgradeIDs <<< "$instance_ids"
 
-          elif [ $in_quorum -gt 3 ]; then  
-            $ssm_put/last-run-status --value "3 or more nodes in quorum, checking for node additions" --type String --overwrite
+          elif [ $in_quorum -gt 3 ]; then
+            $ssm_put/last-run-status --value "4 or more nodes in quorum, checking for node additions"
 
             new_cluster="false"
-            sc_done=$($ssm_get/sidecar-provisioned --query "Parameter.Value" --output text)         
+            sc_done=$($ssm_get/sidecar-provisioned --query "Parameter.Value")
             if [ "$sc_done" != "YES" ] && [ ${SideCarProv} == "YES" ]; then
               sc_prov="YES"
             fi
 
-            cmk_done=$($ssm_get/cmk-policy-modified --query "Parameter.Value" --output text)            
+            cmk_done=$($ssm_get/cmk-policy-modified --query "Parameter.Value")
             if [ "$cmk_done" != "YES" ] && [ ${SideCarProv} == "YES" ]; then
               cmk_prov="YES"
             fi
 
             IFS=', ' read -r -a newIPs <<< "$node_ips"
-            IFS=', ' read -r -a oldIPs <<< $($ssm_get/node-ips --query "Parameter.Value" --output text)
+            IFS=', ' read -r -a oldIPs <<< $($ssm_get/node-ips --query "Parameter.Value")
             for m in "${!!newIPs[@]}"; do
               if [[ ! "${!oldIPs[@]}" =~ "${!newIPs[m]}" ]]; then
                 upgradeIPs+=(${!newIPs[m]})
               fi
             done
 
-            IFS=', ' read -r -a oldIDs <<< $($ssm_get/instance-ids --query "Parameter.Value" --output text)
+            IFS=', ' read -r -a oldIDs <<< $($ssm_get/instance-ids --query "Parameter.Value")
             for m in "${!!newIDs[@]}"; do
               if [[ ! "${!oldIDs[@]}" =~ "${!newIDs[m]}" ]]; then
                 upgradeIDs+=(${!newIDs[m]})
@@ -397,8 +432,7 @@ Resources:
             done
 
             if [ ${!#upgradeIPs[@]} -gt 0 ]; then
-              ./qq --host ${!upgradeIPs[0]} version | grep "revision_id" > revision.txt
-              read revision < revision.txt
+              revision=$(./qq --host ${!upgradeIPs[0]} version | grep "revision_id")
               add_version_num=${!revision//[!0-9.]/}
               add_nodes="true"
               if [ "$version_num" != "$add_version_num" ]; then
@@ -408,55 +442,93 @@ Resources:
           fi
 
           if [ -n "$new_version_num" ]; then
+            sw_file="qumulo_upgrade_cloud_$new_version_num.qimg"
+            s3_path="s3://${BucketName}/${KeyPrefix}upgrade/$sw_file"
             cd /usr/share/nginx/html
-            if [ -e "qumulo_upgrade_cloud_$new_version_num.qimg" ]; then
-              echo "qumulo_upgrade_cloud_$new_version_num.qimg already downloaded to provisioning node"
+            if [ -e "$sw_file" ]; then
+              echo "$sw_file already downloaded"
+            elif [ "$no_inet" == "true" ]; then
+              aws s3api head-object --region ${BucketRegion} --bucket ${BucketName} --key ${KeyPrefix}upgrade/$sw_file || no_file="true"
+              if [ "$no_file" == "true" ]; then
+                $ssm_put/last-run-status --value "Software upgrade required, no Internet or no object $s3_path"
+                exit
+              else
+                aws s3 cp $s3_path ./$sw_file --quiet
+                $ssm_put/last-run-status --value "Downloading $s3_path"
+              fi
             else
-              $ssm_put/last-run-status --value "Downloading Qumulo Core $new_version_num software" --type String --overwrite
-              wget "https://trends.qumulo.com/data/download/qumulo_upgrade_cloud_$new_version_num.qimg?access_code=$software_password" --output-document=qumulo_upgrade_cloud_$new_version_num.qimg --quiet
+              $ssm_put/last-run-status --value "Downloading $sw_file from Trends.qumulo.com"
+              wget "https://trends.qumulo.com/data/download/$sw_file?access_code=$software_password" --output-document=$sw_file --quiet
             fi
             cd /
 
-            $ssm_put/last-run-status --value "Upgrading nodes" --type String --overwrite
+            $ssm_put/last-run-status --value "Upgrading unconfigured nodes to $new_version_num"
 
             upgrade_url=http://$serverIP/qumulo_upgrade_cloud_$new_version_num.qimg
 
+            IFS='.' read -r -a chk <<< $($ssm_get/creation-version --query "Parameter.Value")
+
+            if [ ${!chk[0]} -lt 4 ]; then
+              api=old
+            elif [ ${!chk[0]} -eq 4 ]; then
+              if [ ${!chk[1]} -eq 0 ]; then
+                api=old
+              elif [ ${!chk[1]} -eq 1 ] && [ ${!chk[2]} -lt 5 ]; then
+                api=old
+              else
+                api=new
+              fi
+            else
+              api=new
+            fi
+
+            if [ "$api" == "new" ]; then
+              up_set=unconfigured_upgrade_config_set
+              up_stat=unconfigured_upgrade_status
+            else
+              up_set=upgrade_config_set
+              up_stat=upgrade_status
+            fi
+
             for m in "${!!upgradeIPs[@]}"; do
-              ./qq --host ${!upgradeIPs[m]} upgrade_config_set --path "$upgrade_url" --target "prepare" --override-compatibility-check & 
+              ./qq --host ${!upgradeIPs[m]} $up_set --path "$upgrade_url" --target "prepare" --override-compatibility-check &
             done
 
             for m in "${!!upgradeIPs[@]}"; do
-              until ./qq --host ${!upgradeIPs[m]} upgrade_status --monitor | grep -q "UPGRADE_PREPARED"; do
+              until ./qq --host ${!upgradeIPs[m]} $up_stat --monitor | grep -q "UPGRADE_PREPARED"; do
                 sleep 5
-                echo "Waiting for Upgrade to be prepared for ${!upgradeIPs[m]}"
+                echo "Waiting for Upgrade Prep ${!upgradeIPs[m]}"
               done
-              echo "Upgrade prepared for ${!upgradeIPs[m]}"
+              echo "Upgrade prepared ${!upgradeIPs[m]}"
             done
 
             for m in "${!!upgradeIPs[@]}"; do
-              ./qq --host ${!upgradeIPs[m]} upgrade_config_set --path "$upgrade_url" --target "arm" --override-compatibility-check & 
+              ./qq --host ${!upgradeIPs[m]} $up_set --path "$upgrade_url" --target "arm" --override-compatibility-check &
             done
-
-            sleep 60
            
+            sleep 60
+
             for m in "${!!upgradeIPs[@]}"; do
+              until [ $(curl -sLk -w "%{http_code}\\n" "https://${!upgradeIPs[m]}" -o /dev/null --connect-timeout 3 --max-time 5) == "200" ]; do
+                sleep 5
+                echo "Waiting for ${!upgradeIPs[m]} to boot"
+              done
               final_version_num="null"
               while [ "$new_version_num" != "$final_version_num" ]; do
-                ./qq --host ${!upgradeIPs[m]} version | grep "revision_id" > revision.txt
-                read revision < revision.txt
+                revision=$(./qq --host ${!upgradeIPs[m]} version | grep "revision_id")
                 final_version_num=${!revision//[!0-9.]/}
                 sleep 5
-              done 
+              done
               echo "Node ${!upgradeIPs[m]} upgraded to $new_version_num"
             done
-            $ssm_put/installed-version --value "$new_version_num" --type String --overwrite
+            $ssm_put/installed-version --value "$new_version_num"
           fi
 
           if [ "$new_cluster" == "true" ]; then
             ip_list="$node_ips"
             primary_list=${!ip_list//,/ }
 
-            $ssm_put/last-run-status --value "Forming first quorum and configuring cluster" --type String --overwrite
+            $ssm_put/last-run-status --value "Forming first quorum and configuring cluster"
 
             $qq_host cluster_create --cluster-name ${QClusterName} --admin-password $def_password --max-drive-failures recommended --accept-eula --host-instance-id $def_password --node-ips $primary_list
             until $qq_host node_state_get | grep -q "ACTIVE"; do
@@ -468,20 +540,19 @@ Resources:
             sc_prov="${SideCarProv}"
             cmk_prov=$sc_prov
             
-            $qq_host node_state_get | grep "cluster_id" | tr -d '",' > cluster_id.txt
-            read cluster_id < cluster_id.txt
+            cluster_id=$($qq_host node_state_get | grep "cluster_id" | tr -d '",')
             uuid=${!cluster_id//"cluster_id: "/}
 
-            $ssm_put/uuid --value "$uuid" --type String --overwrite   
-            $ssm_put/node-ips --value "$node_ips" --type String --overwrite               
+            $ssm_put/uuid --value "$uuid"
+            $ssm_put/node-ips --value "$node_ips"
 
             $qq_host login -u admin -p $def_password
             $qq_host network_mod_network --network-id 1 --floating-ip-ranges $float_ips
             $qq_host audit_set_cloudwatch_config --enable --log-group-name /qumulo/${StackName} --region ${Region}
-            $qq_host change_password -o $def_password -p $admin_password        
+            $qq_host change_password -o $def_password -p $admin_password
 
           elif [ "$add_nodes" == "true" ]; then
-            $ssm_put/last-run-status --value "Quorum already exists, adding nodes to cluster" --type String --overwrite
+            $ssm_put/last-run-status --value "Quorum already exists, adding nodes to cluster"
 
             IFS=', ' read -r -a floatIPs <<< "$float_ips"
             delim=""
@@ -491,9 +562,9 @@ Resources:
                 halfFloatIPs="$halfFloatIPs$delim${!floatIPs[m]}"
                 delim=", "
               fi
-            done    
+            done
 
-            $qq_host login -u admin -p $admin_password >/dev/null 2>&1
+            $qq_host login -u admin -p $admin_password >/dev/null
             $qq_host network_mod_network --network-id 1 --floating-ip-ranges $halfFloatIPs
             $qq_host add_nodes --node-ips ${!upgradeIPs[@]}
             until ./qq --host ${!upgradeIPs[0]} node_state_get | grep -q "ACTIVE"; do
@@ -502,14 +573,14 @@ Resources:
             done
             echo "Quorum formed"
             $qq_host network_mod_network --network-id 1 --floating-ip-ranges $float_ips
-            $ssm_put/node-ips --value "$node_ips" --type String --overwrite    
+            $ssm_put/node-ips --value "$node_ips"
 
           else
-            echo "Quorum already exists, no nodes to add to cluster"            
+            echo "Quorum exists, no nodes to add"            
           fi
 
           if [ "$sc_prov" == "YES" ]; then
-            $ssm_put/last-run-status --value "Provisioning Sidecar info on Cluster" --type String --overwrite
+            $ssm_put/last-run-status --value "Provisioning Sidecar info on Cluster"
 
             $qq_host login -u admin -p $admin_password
             $qq_host auth_add_user --name $sc_username --primary-group Guests -p "$sc_password"
@@ -518,16 +589,16 @@ Resources:
             $qq_host auth_modify_role --role $sc_username -G PRIVILEGE_CLUSTER_READ
             $qq_host auth_modify_role --role $sc_username -G PRIVILEGE_FS_ATTRIBUTES_READ
             $qq_host auth_modify_role --role $sc_username -G PRIVILEGE_NETWORK_READ
-            $qq_host auth_assign_role --role $sc_username --trustee $sc_username     
+            $qq_host auth_assign_role --role $sc_username --trustee $sc_username
 
-            $ssm_put/sidecar-provisioned --value "YES" --type String --overwrite
+            $ssm_put/sidecar-provisioned --value "YES"
           fi
 
           if [ "$cmk_prov" == "YES" ]; then
             if [ -z "$cmk" ]; then
               echo "No CMK specified"
             else
-              $ssm_put/last-run-status --value "Applying CMK policy" --type String --overwrite
+              $ssm_put/last-run-status --value "Applying CMK policy"
               aws s3 cp s3://${BucketName}/${KeyPrefix}cfn-init/cmk-policy-skeleton.json /root/add_policy.json
               sc_arn=""
               while [ -z "$sc_arn" ]; do
@@ -543,42 +614,45 @@ Resources:
               head -n -2 /root/def_policy.json > /root/new_policy.json
               cat /root/add_policy3.json >> /root/new_policy.json
               aws kms put-key-policy --region ${Region} --key-id $cmk --policy-name default --policy file:///root/new_policy.json
-              $ssm_put/cmk-policy-modified --value "YES" --type String --overwrite
+              $ssm_put/cmk-policy-modified --value "YES"
             fi
           fi
 
-          $ssm_put/last-run-status --value "Tagging untagged EBS volumes" --type String --overwrite
+          $ssm_put/last-run-status --value "Tagging untagged EBS volumes"
 
-          ec2_vol="aws ec2 describe-volumes --region ${Region} --filter "
+          ec2_vol="aws ec2 describe-volumes --region ${Region} --query Volumes[].VolumeId --out text --filter "
           iid="Name=attachment.instance-id, Values"
-          ec2_tag="aws ec2 create-tags --region ${Region} --resources"
-          for m in "${!!upgradeIDs[@]}"; do 
-            bootIDs+=($($ec2_vol"$iid=${!upgradeIDs[m]}" "Name=attachment.device, Values=/dev/sda*" --query "Volumes[].VolumeId" --out "text"))
-            gp2IDs+=($($ec2_vol"$iid=${!upgradeIDs[m]}" "Name=attachment.device, Values=/dev/x*" "Name=volume-type, Values=gp2" --query "Volumes[].VolumeId" --out "text"))
-            gp3IDs+=($($ec2_vol"$iid=${!upgradeIDs[m]}" "Name=attachment.device, Values=/dev/x*" "Name=volume-type, Values=gp3" --query "Volumes[].VolumeId" --out "text"))
-            st1IDs+=($($ec2_vol"$iid=${!upgradeIDs[m]}" "Name=attachment.device, Values=/dev/x*" "Name=volume-type, Values=st1" --query "Volumes[].VolumeId" --out "text"))
-            sc1IDs+=($($ec2_vol"$iid=${!upgradeIDs[m]}" "Name=attachment.device, Values=/dev/x*" "Name=volume-type, Values=sc1" --query "Volumes[].VolumeId" --out "text"))                           
+          dev_x="Name=attachment.device, Values=/dev/x*"
+          ebs_x="Name=volume-type, Values"
+          for m in "${!!upgradeIDs[@]}"; do
+            bootIDs+=($($ec2_vol"$iid=${!upgradeIDs[m]}" "Name=attachment.device, Values=/dev/sda*"))
+            gp2IDs+=($($ec2_vol"$iid=${!upgradeIDs[m]}" "$dev_x" "$ebs_x=gp2"))
+            gp3IDs+=($($ec2_vol"$iid=${!upgradeIDs[m]}" "$dev_x" "$ebs_x=gp3"))
+            st1IDs+=($($ec2_vol"$iid=${!upgradeIDs[m]}" "$dev_x" "$ebs_x=st1"))
+            sc1IDs+=($($ec2_vol"$iid=${!upgradeIDs[m]}" "$dev_x" "$ebs_x=sc1"))                           
           done
-          for m in "${!!bootIDs[@]}"; do
-            $ec2_tag ${!bootIDs[m]} --tags "Key=Name,Value=$q_stackname-boot"
-          done 
-          for m in "${!!gp2IDs[@]}"; do
-            $ec2_tag ${!gp2IDs[m]} --tags "Key=Name,Value=$q_stackname-gp2"
-          done 
-          for m in "${!!gp3IDs[@]}"; do
-            $ec2_tag ${!gp3IDs[m]} --tags "Key=Name,Value=$q_stackname-gp3"
-          done 
-          for m in "${!!st1IDs[@]}"; do
-            $ec2_tag ${!st1IDs[m]} --tags "Key=Name,Value=$q_stackname-st1"
-          done 
-          for m in "${!!sc1IDs[@]}"; do
-            $ec2_tag ${!sc1IDs[m]} --tags "Key=Name,Value=$q_stackname-sc1"
-          done  
 
-          $ssm_put/instance-ids --value "$instance_ids" --type String --overwrite              
-          $ssm_put/last-run-status --value "Shutting down provisioning node" --type String --overwrite
+          ec2_tag="aws ec2 create-tags --region ${Region} --resources"
+          tag_val="Key=Name,Value=$q_stackname"
+          for m in "${!!bootIDs[@]}"; do
+            $ec2_tag ${!bootIDs[m]} --tags "$tag_val-boot"
+          done
+          for m in "${!!gp2IDs[@]}"; do
+            $ec2_tag ${!gp2IDs[m]} --tags "$tag_val-gp2"
+          done
+          for m in "${!!gp3IDs[@]}"; do
+            $ec2_tag ${!gp3IDs[m]} --tags "$tag_val-gp3"
+          done
+          for m in "${!!st1IDs[@]}"; do
+            $ec2_tag ${!st1IDs[m]} --tags "$tag_val-st1"
+          done
+          for m in "${!!sc1IDs[@]}"; do
+            $ec2_tag ${!sc1IDs[m]} --tags "$tag_val-sc1"
+          done
+
+          $ssm_put/instance-ids --value "$instance_ids"
+          $ssm_put/last-run-status --value "Shutting down provisioning instance"
           sleep 10
-          echo "Powering off Provisioning Node"
           poweroff
 
           --//

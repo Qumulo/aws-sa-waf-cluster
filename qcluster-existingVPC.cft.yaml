@@ -28,7 +28,7 @@ Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
       - Label:
-          default: AWS Template Configuration - aws-sa-waf-cluster version 3.1
+          default: AWS Template Configuration - aws-sa-waf-cluster version 3.2
         Parameters:
           - S3BucketName
           - S3KeyPrefix
@@ -53,6 +53,7 @@ Metadata:
       - Label:
           default: Qumulo File Data Platform Configuration
         Parameters:
+          - QDr
           - QMarketPlaceType
           - QAmiID
           - QInstanceType
@@ -65,7 +66,7 @@ Metadata:
           - VolumesEncryptionKey
           - QInstanceRecoveryTopic
           - QAuditLog
-          - ProvisioningServerAMI
+          - TermProtection
 
       - Label:
           default: Qumulo EBS Monitoring/Replacement & CloudWatch Metrics Configuration
@@ -105,6 +106,8 @@ Metadata:
         default: "Floating IP for IP Failover"
       QFloatRecordName:
         default: "OPTIONAL: R53 Record Name for Qumulo RR DNS "
+      QDr:
+        default: "Is the Qumulo Cluster being deployed for Disaster Recovery?"
       QClusterName:
         default: "Qumulo Cluster Name"
       QClusterAdminPwd:
@@ -127,8 +130,8 @@ Metadata:
         default: "OPTIONAL: Qumulo Instance Recovery Topic"
       QAuditLog:
         default: "OPTIONAL: Send Qumulo Audit Log messages to CloudWatch Logs? "
-      ProvisioningServerAMI:
-        default: "Provisioning Server for Secondary Configuration of Qumulo "
+      TermProtection:
+        default: "Enable Termination Protection "
       QClusterLocalZone:
         default: "Is the Qumulo Cluster being deployed in a Local Zone or Outpost?"
       SideCarProv:
@@ -218,11 +221,19 @@ Parameters:
 
   DomainName:
     Description: "IF NONE.local, R53 config will be skipped. Private R53 DNS Fully Qualified Domain Name.  The .local domain is one way to provide public query resolution for overlapping names: qumulo.com vs qumulo.local"
-    AllowedPattern: '[a-zA-Z0-9]+\..+'
+    AllowedPattern: '[a-zA-Z0-9-]+\..+'
     MaxLength: '255'
     MinLength: '2'
     Type: String
     Default: "NONE.local"  
+
+  QDr:
+    AllowedValues:
+      - "YES"
+      - "NO"
+    Description: Select YES if the cluster is being deployed for a Disaster Recovery workload.
+    Type: String
+    Default: "NO"
 
   QFloatRecordName:
     Description: ONLY APPLICABLE if a domain name was provided above.  Record Name for R53 Private Hosted Zone Qumulo Cluster floating IPs.
@@ -331,7 +342,7 @@ Parameters:
     MaxLength: 11
     MinLength: 5
     Type: String
-    Default: "4.1.5"
+    Default: "4.2.0"
 
   QClusterAdminPwd:
     AllowedPattern: "^(?=.*[a-z])(?=.*[A-Z])(?=.*[@$!%*?&\\-_])[A-Za-z\\d@$!%*?&\\-_]{8,}$"
@@ -373,10 +384,13 @@ Parameters:
     Type: String
     Default: "172.31.0.0/16"
 
-  ProvisioningServerAMI: 
-    Description: "AWS Linux Server AMI"
-    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
-    Default: "/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2"
+  TermProtection:
+    Description: Enable Termination Protection for EC2 instances and the CloudFormation stack
+    AllowedValues:
+      - "YES"
+      - "NO"
+    Type: String
+    Default: "YES"
 
   QClusterLocalZone:
     Description: AWS Lambda services are not supported in Local Zones or Outposts and will be placed in the subnet specified below.
@@ -396,7 +410,7 @@ Parameters:
 
   SideCarPrivateSubnetID:
     Type: AWS::EC2::Subnet::Id
-    Description: An AWS subnet ID MUST be selected. Select a subnet in one of the region's AZs. It is only used if YES for Local Zone or Outpost was selected above.
+    Description: An AWS subnet ID MUST be selected. Select a subnet in one of the region's AZs (not in a Local Zone, not an Outpost Subnet). It is only used if YES for Local Zone or Outpost was selected above.
 
   SideCarProv:
     Description: "By default the Qumulo Sidecar Lambdas are deployed to monitor and replace failed EBS volumes plus send metrics to CloudWatch.  Leave this at default for production environments with WAF compliance.  
@@ -413,7 +427,7 @@ Parameters:
     MaxLength: 11
     MinLength: 5
     Type: String
-    Default: "4.1.5"
+    Default: "4.2.0"
 
   SideCarUsername:
     Type: String
@@ -520,17 +534,17 @@ Rules:
     RuleCondition: !Equals [!Ref QMarketPlaceType, "Custom-1TB-6PB"]
     Assertions:
       - Assert: !Not [!Equals [!Ref QNodeCount, "Select for Custom Offering OR Expanding Cluster"]]
-        AssertDescription: "A Custom Marketplace Offering requires the EC2 Instance Count to be selected"
+        AssertDescription: "A Custom Marketplace Offering requires the EC2 Instance Count to be selected. "
       - Assert: !Not [!Equals [!Ref QDiskConfig, "Select for Custom Offering"]]
-        AssertDescription: "A Custom Marketplace Offering requires the EBS Volume Configuration to be selected"
+        AssertDescription: "A Custom Marketplace Offering requires the EBS Volume Configuration to be selected. "
 
   SpecifiedAMIRule:
     RuleCondition: !Equals [!Ref QMarketPlaceType, "Specified-AMI-ID"]
     Assertions:
       - Assert: !Not [!Equals [!Ref QNodeCount, "Select for Custom Offering OR Expanding Cluster"]]
-        AssertDescription: "A Specified AMI-ID Offering requires the EC2 Instance Count to be selected"
+        AssertDescription: "A Specified AMI-ID Offering requires the EC2 Instance Count to be selected. "
       - Assert: !Not [!Equals [!Ref QDiskConfig, "Select for Custom Offering"]]
-        AssertDescription: "A Specified AMI-ID Offering requires the EBS Volume Configuration to be selected"
+        AssertDescription: "A Specified AMI-ID Offering requires the EBS Volume Configuration to be selected. "
       - Assert: !Not [!Equals [!Ref QAmiID, "Only for Specified AMI-ID Offering"]]
         AssertDescription: "A Specified AMI-ID Offering requires an AMI-ID"
 
@@ -548,6 +562,8 @@ Rules:
         AssertDescription: "Deploy the Cluster in the Local Zone or Outpost subnet. Deploy the Sidecar Lambdas in a subnet associated with a Region AZ."
       - Assert: !Not [!Equals [ !Ref QPublicMgmt, "YES"]]
         AssertDescription: "Local Zones and Outpost do not support the Public Management Option."
+      - Assert: !Not [!Equals [ !Ref QDr, "YES"]]
+        AssertDescription: "Local Zones and Outpost do not support Qumulo Disaster Recovery Hybrid-sc1 clusters."       
 
   LocalZoneEBSMPRule:
     RuleCondition: !And [!Not [!Or [!Equals [!Ref QMarketPlaceType, "Custom-1TB-6PB"], !Equals [!Ref QMarketPlaceType, "Specified-AMI-ID"]]], !Equals [!Ref QClusterLocalZone, "YES"]]
@@ -600,6 +616,31 @@ Rules:
     Assertions: 
       - Assert: !Not [!Equals [!Ref QInstanceType, m5.xlarge]]
         AssertDescription: "m5.xlarge instance types are not supported for production environments.  Choose at least an m5.2xlarge or switch to a dev environment type."
+
+  DrEBSRule:
+    RuleCondition: !Equals [!Ref QDr, "YES"]
+    Assertions:
+      - Assert: !Contains
+        - - Custom-1TB-6PB
+          - Specified-AMI-ID
+        - !Ref QMarketPlaceType
+        AssertDescription: "Disaster Recovery Clusters require Custom-1TB-6PB or Specified-AMI-ID offering.  Select the appropriate offering."
+      - Assert: !Contains 
+        - - m5.xlarge
+          - m5.2xlarge
+          - m5.4xlarge
+          - m5.8xlarge
+        - !Ref QInstanceType
+        AssertDescription: "Disastery Recovery Clusters support m5.2xlarge, m5.4xlarge, and m5.8xlarge instance types.  Select one of these EC2 instance types. "
+      - Assert: !Contains 
+        - - 35TiB-Hybrid-sc1
+          - 55TiB-Hybrid-sc1
+          - 90TiB-Hybrid-sc1
+          - 160TiB-Hybrid-sc1
+          - 256TiB-Hybrid-sc1
+          - 320TiB-Hybrid-sc1
+        - !Ref QDiskConfig
+        AssertDescription: "Disastery Recovery Clusters support Hybrid-sc1 with 35TiB, 55TiB, 90TiB, 160TiB, 256TiB, and 320TiB capacities.  Select one of these EBS configurations."        
 
 Resources:
 
@@ -677,7 +718,7 @@ Resources:
     Properties:
       Parameters:
         SideCarProv: !Ref SideCarProv
-        ProvisioningServerAMI: !Ref ProvisioningServerAMI
+        TermProtection: !Ref TermProtection
         SecretsManagedPolicy: "arn:aws:iam::aws:policy/SecretsManagerReadWrite"
         KeyName: !Ref KeyPair
         Region: !Ref AWS::Region
