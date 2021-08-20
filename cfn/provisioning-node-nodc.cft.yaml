@@ -77,6 +77,14 @@ Parameters:
     Type: String
   TermProtection:
     Type: String
+  QPermissionsBoundary:
+    Type: String
+
+Conditions:
+    ProvBoundary: !Not
+    - !Equals
+      - !Ref QPermissionsBoundary
+      - ""
 
 Resources:
   ProvisionerSG:
@@ -120,10 +128,11 @@ Resources:
             Action:
               - 'sts:AssumeRole'
       Path: /
+      PermissionsBoundary: !If [ProvBoundary, !Sub "arn:aws:iam::${AWS::AccountId}:policy/${QPermissionsBoundary}", !Ref "AWS::NoValue"]      
       ManagedPolicyArns:
         - !Ref SecretsManagedPolicy
       Policies:
-        - PolicyName: S3AccessPolcy
+        - PolicyName: S3AccessPolicy
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
@@ -386,6 +395,12 @@ Resources:
 
           $ssm_put/installed-version --value "$version_num"
 
+          create_ver=$($ssm_get/creation-version --query "Parameter.Value")
+          if [ "$create_ver" == "null" ]; then
+            $ssm_put/creation-version --value "$version_num"
+            create_ver=$version_num
+          fi
+
           if [ $out_quorum -eq ${!#nodeIPs[@]} ] && [ $in_quorum -eq 0 ]; then
             $ssm_put/last-run-status --value "All nodes out of quorum, NEW CLUSTER"
 
@@ -393,7 +408,6 @@ Resources:
 
             aws s3 cp s3://${BucketName}/${KeyPrefix}cfn-init/stack-policy.json /root/stack_policy.json
             aws cloudformation set-stack-policy --region ${Region} --stack-name $q_stackname --stack-policy-body file://root/stack_policy.json
-            $ssm_put/creation-version --value "$version_num"
 
             if [ "$version_num" != "${QClusterVersion}" ]; then
               new_version_num=${QClusterVersion}
@@ -466,7 +480,7 @@ Resources:
 
             upgrade_url=http://$serverIP/qumulo_upgrade_cloud_$new_version_num.qimg
 
-            IFS='.' read -r -a chk <<< $($ssm_get/creation-version --query "Parameter.Value")
+            IFS='.' read -r -a chk <<< $create_ver
 
             if [ ${!chk[0]} -lt 4 ]; then
               api=old
@@ -506,16 +520,10 @@ Resources:
               ./qq --host ${!upgradeIPs[m]} $up_set --path "$upgrade_url" --target "arm" --override-compatibility-check &
             done
            
-            sleep 60
-
             for m in "${!!upgradeIPs[@]}"; do
-              until [ $(curl -sLk -w "%{http_code}\\n" "https://${!upgradeIPs[m]}" -o /dev/null --connect-timeout 3 --max-time 5) == "200" ]; do
-                sleep 5
-                echo "Waiting for ${!upgradeIPs[m]} to boot"
-              done
               final_version_num="null"
               while [ "$new_version_num" != "$final_version_num" ]; do
-                revision=$(./qq --host ${!upgradeIPs[m]} version | grep "revision_id")
+                revision=$(./qq --host ${!upgradeIPs[m]} --timeout 5 version | grep "revision_id") || revision="rebooting"
                 final_version_num=${!revision//[!0-9.]/}
                 sleep 5
               done

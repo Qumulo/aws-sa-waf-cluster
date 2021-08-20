@@ -24,6 +24,16 @@ AWSTemplateFormatVersion: "2010-09-09"
 
 Description: This template creates an IAM Profile for subsequent use by the QSTACK template during cluster creation
 
+Parameters:
+  QPermissionsBoundary:
+    Type: String
+
+Conditions:
+    ProvBoundary: !Not
+    - !Equals
+      - !Ref QPermissionsBoundary
+      - ""
+
 Resources:
   QumuloAccessRole:
     Type: "AWS::IAM::Role"
@@ -38,6 +48,7 @@ Resources:
             Action:
               - "sts:AssumeRole"
       Path: /
+      PermissionsBoundary: !If [ProvBoundary, !Sub "arn:aws:iam::${AWS::AccountId}:policy/${QPermissionsBoundary}", !Ref "AWS::NoValue"]
       Policies:
         - PolicyName: QumuloAccess
           PolicyDocument:

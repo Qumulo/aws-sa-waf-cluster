@@ -28,7 +28,7 @@ Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
       - Label:
-          default: AWS Template Configuration - aws-sa-waf-cluster version 3.2
+          default: AWS Template Configuration - aws-sa-waf-cluster version 3.3
         Parameters:
           - S3BucketName
           - S3KeyPrefix
@@ -64,6 +64,7 @@ Metadata:
           - QClusterName
           - QClusterAdminPwd
           - VolumesEncryptionKey
+          - QPermissionsBoundary
           - QInstanceRecoveryTopic
           - QAuditLog
           - TermProtection
@@ -126,6 +127,8 @@ Metadata:
         default: "Qumulo EC2 Instance Type"
       VolumesEncryptionKey:
         default: "OPTIONAL: AWS EBS Volumes Encryption Key "
+      QPermissionsBoundary:
+        default: "OPTIONAL: AWS Permissions Boundary Policy Name"
       QInstanceRecoveryTopic:
         default: "OPTIONAL: Qumulo Instance Recovery Topic"
       QAuditLog:
@@ -370,6 +373,12 @@ Parameters:
 
   VolumesEncryptionKey: 
     Description: "Leave Blank and AWS will generate a key. To specify a Customer Managed Key provide the KMS CMK ID: 12345678-1234-1234-1234-1234567890ab"
+    Type: String
+    Default: ""
+
+  QPermissionsBoundary:
+    Description: "Apply an IAM Permissions Boundary Policy to the Qumulo IAM roles that are created for the Qumulo cluster and provisioning instance.  This is an account based policy and is optional.  
+                  Qumulo's IAM roles conform to the least privilege model."
     Type: String
     Default: ""
 
@@ -666,6 +675,8 @@ Resources:
   QIAMSTACK:
     Type: "AWS::CloudFormation::Stack"
     Properties:
+      Parameters:
+        QPermissionsBoundary: !Ref QPermissionsBoundary
       TemplateURL: !Sub "https://${S3BucketName}.s3.${AWS::URLSuffix}/${S3KeyPrefix}cfn/qiam.cft.yaml"
       TimeoutInMinutes: 150
 
@@ -738,6 +749,7 @@ Resources:
         QStackName: !GetAtt QSTACK.Outputs.AWSStackName
         QClusterName: !Ref QClusterName  
         QClusterVersion: !Ref QClusterVersion
+        QPermissionsBoundary: !Ref QPermissionsBoundary  	
         BucketName: !Ref S3BucketName
         KeyPrefix: !Ref S3KeyPrefix
         BucketRegion: !Ref S3BucketRegion
