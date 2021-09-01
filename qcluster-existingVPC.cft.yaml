@@ -642,7 +642,10 @@ Rules:
         - !Ref QInstanceType
         AssertDescription: "Disastery Recovery Clusters support m5.2xlarge, m5.4xlarge, and m5.8xlarge instance types.  Select one of these EC2 instance types. "
       - Assert: !Contains 
-        - - 35TiB-Hybrid-sc1
+        - - 8TiB-Hybrid-sc1
+          - 13TiB-Hybrid-sc1
+          - 20TB-Hybrid-sc1
+          - 35TiB-Hybrid-sc1
           - 55TiB-Hybrid-sc1
           - 90TiB-Hybrid-sc1
           - 160TiB-Hybrid-sc1
