@@ -204,6 +204,13 @@ Resources:
       Value: "null"
       Type: String
 
+  FloatIPsSSM: 
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub "/qumulo/${QStackName}/float-ips"       
+      Value: "null"
+      Type: String
+
   UuidSSM: 
     Type: AWS::SSM::Parameter
     Properties:
@@ -312,6 +319,7 @@ Resources:
           this_ec2=$(wget -q -O - http://169.254.169.254/latest/meta-data/instance-id)
           sc_prov="NO"
           cmk_prov="NO"
+          mod_FIPs="NO"
           bkt_pfx="$s3bkt/$s3pfx"
           req_ver="${QClusterVersion}"
 
@@ -448,6 +456,19 @@ Resources:
               fi
             done
 
+            IFS=', ' read -r -a newFIPs <<< "$float_ips"
+            IFS=', ' read -r -a oldFIPs <<< $(ssmget "float-ips" "$region" "$q_stackname")
+            if [ ${!#oldFIPs[@]} -eq ${!#newFIPs[@]} ]; then            
+              for m in "${!!newFIPs[@]}"; do
+                if [[ ! "${!oldFIPs[@]}" =~ "${!newFIPs[m]}" ]]; then
+                  mod_FIPs="YES"
+                  break
+                fi
+              done
+            else
+              mod_FIPs="YES"
+            fi
+
             if [ ${!#upgradeIPs[@]} -gt 0 ]; then
               revision=$(./qq --host ${!upgradeIPs[0]} version | grep "revision_id")
               add_ver=${!revision//[!0-9.]/}
@@ -575,20 +596,21 @@ Resources:
             $qqh audit_set_cloudwatch_config --enable --log-group-name /qumulo/${StackName} --region $region
             $qqh change_password -o $def_password -p $admin_password
 
+            ssmput "float-ips" "$region" "$q_stackname" "$float_ips"
+
           elif [ "$add_nodes" == "true" ]; then
             ssmput "last-run-status" "$region" "$q_stackname" "Quorum already exists, adding nodes to cluster"
 
-            IFS=', ' read -r -a floatIPs <<< "$float_ips"
             delim=""
             halfFloatIPs=""
-            for m in "${!!floatIPs[@]}"; do
+            for m in "${!!newFIPs[@]}"; do
               if [ $m -lt 40 ]; then
-                halfFloatIPs="$halfFloatIPs$delim${!floatIPs[m]}"
+                halfFloatIPs="$halfFloatIPs$delim${!newFIPs[m]}"
                 delim=", "
               fi
             done
 
-            $qqh login -u admin -p $admin_password >/dev/null
+            $qqh login -u admin -p $admin_password
             $qqh network_mod_network --network-id 1 --floating-ip-ranges $halfFloatIPs
             $qqh add_nodes --node-ips ${!upgradeIPs[@]}
             until ./qq --host ${!upgradeIPs[0]} node_state_get | grep -q "ACTIVE"; do
@@ -598,9 +620,13 @@ Resources:
             echo "Quorum formed"
             $qqh network_mod_network --network-id 1 --floating-ip-ranges $float_ips
             ssmput "node-ips" "$region" "$q_stackname" "$node_ips"
+            ssmput "float-ips" "$region" "$q_stackname" "$float_ips"
 
-          else
-            echo "Quorum exists, no nodes to add"
+          elif [ "$mod_FIPs" == "YES" ]; then
+            ssmput "last-run-status" "$region" "$q_stackname" "Quorum already exists, no nodes to add, modifying floating IPs"
+            $qqh login -u admin -p $admin_password
+            $qqh network_mod_network --network-id 1 --floating-ip-ranges $float_ips
+            ssmput "float-ips" "$region" "$q_stackname" "$float_ips"
           fi
 
           if [ "$sc_prov" == "YES" ]; then

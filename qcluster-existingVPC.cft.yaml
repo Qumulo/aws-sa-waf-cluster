@@ -28,7 +28,7 @@ Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
       - Label:
-          default: AWS Template Configuration - aws-sa-waf-cluster version 3.4
+          default: AWS Template Configuration - aws-sa-waf-cluster version 3.5
         Parameters:
           - S3BucketName
           - S3KeyPrefix
