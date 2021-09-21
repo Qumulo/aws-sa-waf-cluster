@@ -28,6 +28,16 @@ Parameters:
   MarketPlaceType:
     Type: String
 
+Metadata:
+  cfn-lint:
+    config:
+      ignore_checks:
+        - W9001
+        - W9002
+        - W9003
+        - W9004
+        - W9006
+        
 Mappings:
   RegionMap:
     us-east-1:

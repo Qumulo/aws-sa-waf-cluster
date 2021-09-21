@@ -81,9 +81,14 @@ Parameters:
     Type: String
 
 Conditions:
-    ProvBoundary: !Not
+  ProvBoundary: !Not
     - !Equals
       - !Ref QPermissionsBoundary
+      - ""
+
+  ProvCMK: !Not
+    - !Equals
+      - !Ref CMK
       - ""
 
 Resources:
@@ -143,7 +148,7 @@ Resources:
                 Resource:
                   - !Sub "arn:aws:s3:::${BucketName}/*"
                   - !Sub "arn:aws:s3:::${BucketName}"                 
-        - PolicyName: KMSAccessPolicy
+        - PolicyName: Provisioner-EC2-Lambda-SSM
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
@@ -160,14 +165,22 @@ Resources:
                   - "lambda:ListFunctions"
                   - "lambda:GetFunction"
                   - "lambda:ListTags"
-                  - "kms:Decrypt"
-                  - "kms:PutKeyPolicy"
-                  - "kms:GetKeyPolicy"
                   - "ssm:ListInstanceAssociations"
                   - "ssm:GetParameter"
                   - "ssm:PutParameter"
                   - "ssm:UpdateInstanceInformation"
+                  - "kms:Decrypt"                  
                 Resource: "*"
+        - PolicyName: Provisioner-KMSPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: !If [ProvCMK, Allow, Deny]
+                Action:                   
+                  - "kms:PutKeyPolicy"
+                  - "kms:GetKeyPolicy"
+                Resource: !If [ProvCMK, !Sub "arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/${CMK}", "*"]
+
 
   ProvisionerProfile:
     Type: "AWS::IAM::InstanceProfile"
@@ -324,12 +337,12 @@ Resources:
           req_ver="${QClusterVersion}"
 
           #Functions are getqq, ssmput, ssmget, getsecret, stackprotect, ec2protect, vercomp, cmkmodpolicy, tagvols
-          if [[ -e "functions-v1.sh" ]]; then
-            echo "functions v1 exist"
+          if [[ -e "functions-v2.sh" ]]; then
+            echo "functions-v2 exist"
           else
-            aws s3 cp s3://$bkt_pfx"cfn-init/functions-v1.sh" ./functions-v1.sh --quiet
+            aws s3 cp s3://$bkt_pfx"cfn-init/functions-v2.sh" ./functions-v2.sh --quiet
           fi
-          source functions-v1.sh
+          source functions-v2.sh
 
           if [ $(curl -sL -w "%{http_code}\\n" "trends.qumulo.com" -o /dev/null --connect-timeout 3 --max-time 5) == "200" ]; then
             ssmput "last-run-status" "$region" "$q_stackname" "BOOTED. Public Internet Reachable"
@@ -453,6 +466,7 @@ Resources:
             for m in "${!!newIDs[@]}"; do
               if [[ ! "${!oldIDs[@]}" =~ "${!newIDs[m]}" ]]; then
                 upgradeIDs+=(${!newIDs[m]})
+                ec2protect "$protection" "$region" "${!newIDs[m]}"                
               fi
             done
 
@@ -564,6 +578,7 @@ Resources:
                 echo "Node ${!upgradeIPs[m]} upgraded to $cur_ver"
               done
               ssmput "installed-version" "$region" "$q_stackname" "$cur_ver"
+              sleep 10
             done
           fi
 
@@ -656,7 +671,7 @@ Resources:
           fi
 
           ssmput "last-run-status" "$region" "$q_stackname" "Tagging untagged EBS volumes"
-          tagvols "upgradeIDs" "$region" "$q_stackname"
+          tagvols "newIDs" "$region" "$q_stackname"
 
           ssmput "instance-ids" "$region" "$q_stackname" "$instance_ids"
           ssmput "last-run-status" "$region" "$q_stackname" "Shutting down provisioning instance"

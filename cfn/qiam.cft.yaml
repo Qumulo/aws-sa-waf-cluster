@@ -27,11 +27,18 @@ Description: This template creates an IAM Profile for subsequent use by the QSTA
 Parameters:
   QPermissionsBoundary:
     Type: String
+  VolumesEncryptionKey:
+    Type: String
 
 Conditions:
-    ProvBoundary: !Not
+  ProvBoundary: !Not
     - !Equals
       - !Ref QPermissionsBoundary
+      - ""
+
+  ProvCMK: !Not
+    - !Equals
+      - !Ref VolumesEncryptionKey
       - ""
 
 Resources:
@@ -50,7 +57,7 @@ Resources:
       Path: /
       PermissionsBoundary: !If [ProvBoundary, !Sub "arn:aws:iam::${AWS::AccountId}:policy/${QPermissionsBoundary}", !Ref "AWS::NoValue"]
       Policies:
-        - PolicyName: QumuloAccess
+        - PolicyName: QumuloAccess-EC2-CW-Logs
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
@@ -61,15 +68,23 @@ Resources:
                   - "ec2:DescribeInstances"
                   - "ec2:AssignPrivateIpAddresses"
                   - "ec2:UnassignPrivateIpAddresses"
-                  - "kms:Decrypt"
+                  - "logs:PutLogEvents"
+                  - "logs:CreateLogStream"
+                  - "kms:Decrypt"                  
+                Resource: "*"
+        - PolicyName: QumuloAccess-KMSCMK
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "kms:Decrypt"                     
                   - "kms:GenerateDataKeyWithoutPlaintext"
                   - "kms:ReEncryptFrom"
                   - "kms:ReEncryptTo"
                   - "kms:DescribeKey"
                   - "kms:CreateGrant"
-                  - "logs:PutLogEvents"
-                  - "logs:CreateLogStream"
-                Resource: "*"
+                Resource: !If [ProvCMK, !Sub "arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/${VolumesEncryptionKey}", !Sub "arn:aws:kms:${AWS::Region}:${AWS::AccountId}:alias/aws/ebs"]
 
   QumuloAccessProfile:
     Type: "AWS::IAM::InstanceProfile"

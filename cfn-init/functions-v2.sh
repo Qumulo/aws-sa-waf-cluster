@@ -121,26 +121,30 @@ tagvols () {
   id_list=("${!id_list_name}")
 
   for m in "${!id_list[@]}"; do 
-    bootIDs+=($(aws ec2 describe-volumes --region $region --filter "Name=attachment.instance-id, Values=${id_list[m]}" "Name=attachment.device, Values=/dev/sda*" --query "Volumes[].VolumeId" --out "text"))
-    gp2IDs+=($(aws ec2 describe-volumes --region $region --filter "Name=attachment.instance-id, Values=${id_list[m]}" "Name=attachment.device, Values=/dev/x*" "Name=volume-type, Values=gp2" --query "Volumes[].VolumeId" --out "text"))
-    gp3IDs+=($(aws ec2 describe-volumes --region $region --filter "Name=attachment.instance-id, Values=${id_list[m]}" "Name=attachment.device, Values=/dev/x*" "Name=volume-type, Values=gp3" --query "Volumes[].VolumeId" --out "text"))
-    st1IDs+=($(aws ec2 describe-volumes --region $region --filter "Name=attachment.instance-id, Values=${id_list[m]}" "Name=attachment.device, Values=/dev/x*" "Name=volume-type, Values=st1" --query "Volumes[].VolumeId" --out "text"))
-    sc1IDs+=($(aws ec2 describe-volumes --region $region --filter "Name=attachment.instance-id, Values=${id_list[m]}" "Name=attachment.device, Values=/dev/x*" "Name=volume-type, Values=sc1" --query "Volumes[].VolumeId" --out "text"))                           
+    bootIDs+=($(aws ec2 describe-volumes --region $region --filter "Name=attachment.instance-id, Values=${id_list[m]}" "Name=attachment.device, Values=/dev/sda*" --query "Volumes[].VolumeId" --out "text"))  
+
+    gp2IDs=($(aws ec2 describe-volumes --region $region --filter "Name=attachment.instance-id, Values=${id_list[m]}" "Name=attachment.device, Values=/dev/x*" "Name=volume-type, Values=gp2" --query "Volumes[].VolumeId" --out "text"))
+    if [ ${#gp2IDs[@]} -gt 0 ]; then
+      aws ec2 create-tags --region $region --resources ${gp2IDs[@]} --tags "Key=Name,Value=$stack_name-gp2"
+    fi    
+
+    gp3IDs=($(aws ec2 describe-volumes --region $region --filter "Name=attachment.instance-id, Values=${id_list[m]}" "Name=attachment.device, Values=/dev/x*" "Name=volume-type, Values=gp3" --query "Volumes[].VolumeId" --out "text"))
+    if [ ${#gp3IDs[@]} -gt 0 ]; then
+      aws ec2 create-tags --region $region --resources ${gp3IDs[@]} --tags "Key=Name,Value=$stack_name-gp3"
+    fi   
+
+    st1IDs=($(aws ec2 describe-volumes --region $region --filter "Name=attachment.instance-id, Values=${id_list[m]}" "Name=attachment.device, Values=/dev/x*" "Name=volume-type, Values=st1" --query "Volumes[].VolumeId" --out "text"))
+    if [ ${#st1IDs[@]} -gt 0 ]; then
+      aws ec2 create-tags --region $region --resources ${st1IDs[@]} --tags "Key=Name,Value=$stack_name-st1"
+    fi   
+
+    sc1IDs=($(aws ec2 describe-volumes --region $region --filter "Name=attachment.instance-id, Values=${id_list[m]}" "Name=attachment.device, Values=/dev/x*" "Name=volume-type, Values=sc1" --query "Volumes[].VolumeId" --out "text"))                           
+    if [ ${#sc1IDs[@]} -gt 0 ]; then
+      aws ec2 create-tags --region $region --resources ${sc1IDs[@]} --tags "Key=Name,Value=$stack_name-sc1"
+    fi   
   done
 
-  for m in "${!bootIDs[@]}"; do
-    aws ec2 create-tags --region $region --resources ${bootIDs[m]} --tags "Key=Name,Value=$stack_name-boot"
-  done 
-  for m in "${!gp2IDs[@]}"; do
-    aws ec2 create-tags --region $region --resources ${gp2IDs[m]} --tags "Key=Name,Value=$stack_name-gp2"
-  done 
-  for m in "${!gp3IDs[@]}"; do
-    aws ec2 create-tags --region $region --resources ${gp3IDs[m]} --tags "Key=Name,Value=$stack_name-gp3"
-  done 
-  for m in "${!st1IDs[@]}"; do
-    aws ec2 create-tags --region $region --resources ${st1IDs[m]} --tags "Key=Name,Value=$stack_name-st1"
-  done 
-  for m in "${!sc1IDs[@]}"; do
-    aws ec2 create-tags --region $region --resources ${sc1IDs[m]} --tags "Key=Name,Value=$stack_name-sc1"
-  done
+  if [ ${#bootIDs[@]} -gt 0 ]; then
+    aws ec2 create-tags --region $region --resources ${bootIDs[@]} --tags "Key=Name,Value=$stack_name-boot"
+  fi
 }

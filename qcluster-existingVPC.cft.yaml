@@ -28,7 +28,7 @@ Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
       - Label:
-          default: AWS Template Configuration - aws-sa-waf-cluster version 3.5
+          default: AWS Template Configuration - aws-sa-waf-cluster version 3.6
         Parameters:
           - S3BucketName
           - S3KeyPrefix
@@ -345,7 +345,7 @@ Parameters:
     MaxLength: 11
     MinLength: 5
     Type: String
-    Default: "4.2.0"
+    Default: "4.2.3"
 
   QClusterAdminPwd:
     AllowedPattern: "^(?=.*[a-z])(?=.*[A-Z])(?=.*[@$!%*?&\\-_])[A-Za-z\\d@$!%*?&\\-_]{8,}$"
@@ -436,7 +436,7 @@ Parameters:
     MaxLength: 11
     MinLength: 5
     Type: String
-    Default: "4.2.0"
+    Default: "4.2.3"
 
   SideCarUsername:
     Type: String
@@ -662,7 +662,7 @@ Resources:
     Properties:
       Parameters:
         MarketPlaceType: !FindInMap [ConfigMap, !Ref QMarketPlaceType, ShortName]
-      TemplateURL: !Sub "https://${S3BucketName}.s3.${AWS::URLSuffix}/${S3KeyPrefix}cfn/qami-id-lookup.cft.yaml"
+      TemplateURL: !Sub "https://${S3BucketName}.s3.${AWS::URLSuffix}/${S3KeyPrefix}cfn/qami-id-lookup-4.2.0.cft.yaml"
       TimeoutInMinutes: 150      
 
   SECRETSSTACK:
@@ -680,6 +680,7 @@ Resources:
     Properties:
       Parameters:
         QPermissionsBoundary: !Ref QPermissionsBoundary
+        VolumesEncryptionKey: !Ref VolumesEncryptionKey              
       TemplateURL: !Sub "https://${S3BucketName}.s3.${AWS::URLSuffix}/${S3KeyPrefix}cfn/qiam.cft.yaml"
       TimeoutInMinutes: 150
 
