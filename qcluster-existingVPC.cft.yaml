@@ -652,7 +652,7 @@ Rules:
           - 256TiB-Hybrid-sc1
           - 320TiB-Hybrid-sc1
         - !Ref QDiskConfig
-        AssertDescription: "Disastery Recovery Clusters support Hybrid-sc1 with 35TiB, 55TiB, 90TiB, 160TiB, 256TiB, and 320TiB capacities.  Select one of these EBS configurations."        
+        AssertDescription: "Disastery Recovery Clusters support Hybrid-sc1.  Select one of these EBS configurations."        
 
 Resources:
 
