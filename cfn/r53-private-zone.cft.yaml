@@ -130,6 +130,11 @@ Mappings:
 
 Conditions:
 
+  ProvRecordName: !Not
+    - !Equals
+      - !Ref RecordName
+      - ""
+
   Ripple: !Equals ["A", "A"]
 
   Provision5:  !Or  [!Equals [!FindInMap [FloatMap, !Ref NumNodes, !Ref NumIPs], "5"],  Condition: Provision6]
@@ -227,798 +232,797 @@ Resources:
               - " - Hosted Private Zone"
   RoundRobinGroup:
     Type: AWS::Route53::RecordSetGroup
-    DependsOn: DNSZone
     Properties:
       Comment: "A Records for DNS RR to Qumulo Cluster Frontend"
       HostedZoneId: !Ref DNSZone
       RecordSets:
-        - Name: !Sub "${RecordName}.${FQDName}"
+        - Name: !If [ProvRecordName, !Sub "${RecordName}.${FQDName}", !Ref FQDName]
           ResourceRecords: 
             - !Select [0, !Split [", ", !Ref FloatIPs]]
           SetIdentifier: "Qumulo FIP 1"
           Type: A
           TTL: "0"
-          Weight: "0"
-        - Name: !Sub "${RecordName}.${FQDName}"
+          Weight: 0
+        - Name: !If [ProvRecordName, !Sub "${RecordName}.${FQDName}", !Ref FQDName]
           ResourceRecords: 
             - !Select [1, !Split [", ", !Ref FloatIPs]]
           SetIdentifier: "Qumulo FIP 2"
           Type: A
           TTL: "0"
-          Weight: "0"
-        - Name: !Sub "${RecordName}.${FQDName}"
+          Weight: 0
+        - Name: !If [ProvRecordName, !Sub "${RecordName}.${FQDName}", !Ref FQDName]
           ResourceRecords: 
             - !Select [2, !Split [", ", !Ref FloatIPs]]
           SetIdentifier: "Qumulo FIP 3"
           Type: A
           TTL: "0"
-          Weight: "0"
-        - Name: !Sub "${RecordName}.${FQDName}"
+          Weight: 0
+        - Name: !If [ProvRecordName, !Sub "${RecordName}.${FQDName}", !Ref FQDName]
           ResourceRecords: 
             - !Select [3, !Split [", ", !Ref FloatIPs]]
           SetIdentifier: "Qumulo FIP 4"
           Type: A
           TTL: "0"
-          Weight: "0"
+          Weight: 0
         - !If
           - Provision5
-          - Name: !Sub "${RecordName}.${FQDName}"
+          - Name: !If [ProvRecordName, !Sub "${RecordName}.${FQDName}", !Ref FQDName]
             ResourceRecords: 
               - !Select [4, !Split [", ", !Ref FloatIPs]]
             SetIdentifier: "Qumulo FIP 5"
             Type: A
             TTL: "0"
-            Weight: "0"
+            Weight: 0
           - !Ref AWS::NoValue
         - !If
           - Provision6
-          - Name: !Sub "${RecordName}.${FQDName}"
+          - Name: !If [ProvRecordName, !Sub "${RecordName}.${FQDName}", !Ref FQDName]
             ResourceRecords: 
               - !Select [5, !Split [", ", !Ref FloatIPs]]
             SetIdentifier: "Qumulo FIP 6"
             Type: A
             TTL: "0"
-            Weight: "0"
+            Weight: 0
           - !Ref AWS::NoValue
         - !If
           - Provision7
-          - Name: !Sub "${RecordName}.${FQDName}"
+          - Name: !If [ProvRecordName, !Sub "${RecordName}.${FQDName}", !Ref FQDName]
             ResourceRecords: 
               - !Select [6, !Split [", ", !Ref FloatIPs]]
             SetIdentifier: "Qumulo FIP 7"
             Type: A
             TTL: "0"
-            Weight: "0"
+            Weight: 0
           - !Ref AWS::NoValue
         - !If
           - Provision8
-          - Name: !Sub "${RecordName}.${FQDName}"
+          - Name: !If [ProvRecordName, !Sub "${RecordName}.${FQDName}", !Ref FQDName]
             ResourceRecords: 
               - !Select [7, !Split [", ", !Ref FloatIPs]]
             SetIdentifier: "Qumulo FIP 8"
             Type: A
             TTL: "0"
-            Weight: "0"
+            Weight: 0
           - !Ref AWS::NoValue
         - !If
           - Provision9
-          - Name: !Sub "${RecordName}.${FQDName}"
+          - Name: !If [ProvRecordName, !Sub "${RecordName}.${FQDName}", !Ref FQDName]
             ResourceRecords: 
               - !Select [8, !Split [", ", !Ref FloatIPs]]
             SetIdentifier: "Qumulo FIP 9"
             Type: A
             TTL: "0"
-            Weight: "0"
+            Weight: 0
           - !Ref AWS::NoValue
         - !If
           - Provision10
-          - Name: !Sub "${RecordName}.${FQDName}"
+          - Name: !If [ProvRecordName, !Sub "${RecordName}.${FQDName}", !Ref FQDName]
             ResourceRecords: 
               - !Select [9, !Split [", ", !Ref FloatIPs]]
             SetIdentifier: "Qumulo FIP 10"
             Type: A
             TTL: "0"
-            Weight: "0"
+            Weight: 0
           - !Ref AWS::NoValue
         - !If
           - Provision11
-          - Name: !Sub "${RecordName}.${FQDName}"
+          - Name: !If [ProvRecordName, !Sub "${RecordName}.${FQDName}", !Ref FQDName]
             ResourceRecords: 
               - !Select [10, !Split [", ", !Ref FloatIPs]]
             SetIdentifier: "Qumulo FIP 11"
             Type: A
             TTL: "0"
-            Weight: "0"
+            Weight: 0
           - !Ref AWS::NoValue
         - !If
           - Provision12
-          - Name: !Sub "${RecordName}.${FQDName}"
+          - Name: !If [ProvRecordName, !Sub "${RecordName}.${FQDName}", !Ref FQDName]
             ResourceRecords: 
               - !Select [11, !Split [", ", !Ref FloatIPs]]
             SetIdentifier: "Qumulo FIP 12"
             Type: A
             TTL: "0"
-            Weight: "0"
+            Weight: 0
           - !Ref AWS::NoValue
         - !If
           - Provision13
-          - Name: !Sub "${RecordName}.${FQDName}"
+          - Name: !If [ProvRecordName, !Sub "${RecordName}.${FQDName}", !Ref FQDName]
             ResourceRecords: 
               - !Select [12, !Split [", ", !Ref FloatIPs]]
             SetIdentifier: "Qumulo FIP 13"
             Type: A
             TTL: "0"
-            Weight: "0"
+            Weight: 0
           - !Ref AWS::NoValue
         - !If
           - Provision14
-          - Name: !Sub "${RecordName}.${FQDName}"
+          - Name: !If [ProvRecordName, !Sub "${RecordName}.${FQDName}", !Ref FQDName]
             ResourceRecords: 
               - !Select [13, !Split [", ", !Ref FloatIPs]]
             SetIdentifier: "Qumulo FIP 14"
             Type: A
             TTL: "0"
-            Weight: "0"
+            Weight: 0
           - !Ref AWS::NoValue
         - !If
           - Provision15
-          - Name: !Sub "${RecordName}.${FQDName}"
+          - Name: !If [ProvRecordName, !Sub "${RecordName}.${FQDName}", !Ref FQDName]
             ResourceRecords: 
               - !Select [14, !Split [", ", !Ref FloatIPs]]
             SetIdentifier: "Qumulo FIP 15"
             Type: A
             TTL: "0"
-            Weight: "0"
+            Weight: 0
           - !Ref AWS::NoValue
         - !If
           - Provision16
-          - Name: !Sub "${RecordName}.${FQDName}"
+          - Name: !If [ProvRecordName, !Sub "${RecordName}.${FQDName}", !Ref FQDName]
             ResourceRecords: 
               - !Select [15, !Split [", ", !Ref FloatIPs]]
             SetIdentifier: "Qumulo FIP 16"
             Type: A
             TTL: "0"
-            Weight: "0"
+            Weight: 0
           - !Ref AWS::NoValue
         - !If
           - Provision17
-          - Name: !Sub "${RecordName}.${FQDName}"
+          - Name: !If [ProvRecordName, !Sub "${RecordName}.${FQDName}", !Ref FQDName]
             ResourceRecords: 
               - !Select [16, !Split [", ", !Ref FloatIPs]]
             SetIdentifier: "Qumulo FIP 17"
             Type: A
             TTL: "0"
-            Weight: "0"
+            Weight: 0
           - !Ref AWS::NoValue
         - !If
           - Provision18
-          - Name: !Sub "${RecordName}.${FQDName}"
+          - Name: !If [ProvRecordName, !Sub "${RecordName}.${FQDName}", !Ref FQDName]
             ResourceRecords: 
               - !Select [17, !Split [", ", !Ref FloatIPs]]
             SetIdentifier: "Qumulo FIP 18"
             Type: A
             TTL: "0"
-            Weight: "0"
+            Weight: 0
           - !Ref AWS::NoValue
         - !If
           - Provision19
-          - Name: !Sub "${RecordName}.${FQDName}"
+          - Name: !If [ProvRecordName, !Sub "${RecordName}.${FQDName}", !Ref FQDName]
             ResourceRecords: 
               - !Select [18, !Split [", ", !Ref FloatIPs]]
             SetIdentifier: "Qumulo FIP 19"
             Type: A
             TTL: "0"
-            Weight: "0"
+            Weight: 0
           - !Ref AWS::NoValue
         - !If
           - Provision20
-          - Name: !Sub "${RecordName}.${FQDName}"
+          - Name: !If [ProvRecordName, !Sub "${RecordName}.${FQDName}", !Ref FQDName]
             ResourceRecords: 
               - !Select [19, !Split [", ", !Ref FloatIPs]]
             SetIdentifier: "Qumulo FIP 20"
             Type: A
             TTL: "0"
-            Weight: "0"
+            Weight: 0
           - !Ref AWS::NoValue
         - !If
           - Provision21
-          - Name: !Sub "${RecordName}.${FQDName}"
+          - Name: !If [ProvRecordName, !Sub "${RecordName}.${FQDName}", !Ref FQDName]
             ResourceRecords: 
               - !Select [20, !Split [", ", !Ref FloatIPs]]
             SetIdentifier: "Qumulo FIP 21"
             Type: A
             TTL: "0"
-            Weight: "0"
+            Weight: 0
           - !Ref AWS::NoValue
         - !If
           - Provision22
-          - Name: !Sub "${RecordName}.${FQDName}"
+          - Name: !If [ProvRecordName, !Sub "${RecordName}.${FQDName}", !Ref FQDName]
             ResourceRecords: 
               - !Select [21, !Split [", ", !Ref FloatIPs]]
             SetIdentifier: "Qumulo FIP 22"
             Type: A
             TTL: "0"
-            Weight: "0"
+            Weight: 0
           - !Ref AWS::NoValue
         - !If
           - Provision23
-          - Name: !Sub "${RecordName}.${FQDName}"
+          - Name: !If [ProvRecordName, !Sub "${RecordName}.${FQDName}", !Ref FQDName]
             ResourceRecords: 
               - !Select [22, !Split [", ", !Ref FloatIPs]]
             SetIdentifier: "Qumulo FIP 23"
             Type: A
             TTL: "0"
-            Weight: "0"
+            Weight: 0
           - !Ref AWS::NoValue
         - !If
           - Provision24
-          - Name: !Sub "${RecordName}.${FQDName}"
+          - Name: !If [ProvRecordName, !Sub "${RecordName}.${FQDName}", !Ref FQDName]
             ResourceRecords: 
               - !Select [23, !Split [", ", !Ref FloatIPs]]
             SetIdentifier: "Qumulo FIP 24"
             Type: A
             TTL: "0"
-            Weight: "0"
+            Weight: 0
           - !Ref AWS::NoValue
         - !If
           - Provision25
-          - Name: !Sub "${RecordName}.${FQDName}"
+          - Name: !If [ProvRecordName, !Sub "${RecordName}.${FQDName}", !Ref FQDName]
             ResourceRecords: 
               - !Select [24, !Split [", ", !Ref FloatIPs]]
             SetIdentifier: "Qumulo FIP 25"
             Type: A
             TTL: "0"
-            Weight: "0"
+            Weight: 0
           - !Ref AWS::NoValue
         - !If
           - Provision26
-          - Name: !Sub "${RecordName}.${FQDName}"
+          - Name: !If [ProvRecordName, !Sub "${RecordName}.${FQDName}", !Ref FQDName]
             ResourceRecords: 
               - !Select [25, !Split [", ", !Ref FloatIPs]]
             SetIdentifier: "Qumulo FIP 26"
             Type: A
             TTL: "0"
-            Weight: "0"
+            Weight: 0
           - !Ref AWS::NoValue
         - !If
           - Provision27
-          - Name: !Sub "${RecordName}.${FQDName}"
+          - Name: !If [ProvRecordName, !Sub "${RecordName}.${FQDName}", !Ref FQDName]
             ResourceRecords: 
               - !Select [26, !Split [", ", !Ref FloatIPs]]
             SetIdentifier: "Qumulo FIP 27"
             Type: A
             TTL: "0"
-            Weight: "0"
+            Weight: 0
           - !Ref AWS::NoValue
         - !If
           - Provision28
-          - Name: !Sub "${RecordName}.${FQDName}"
+          - Name: !If [ProvRecordName, !Sub "${RecordName}.${FQDName}", !Ref FQDName]
             ResourceRecords: 
               - !Select [27, !Split [", ", !Ref FloatIPs]]
             SetIdentifier: "Qumulo FIP 28"
             Type: A
             TTL: "0"
-            Weight: "0"
+            Weight: 0
           - !Ref AWS::NoValue
         - !If
           - Provision29
-          - Name: !Sub "${RecordName}.${FQDName}"
+          - Name: !If [ProvRecordName, !Sub "${RecordName}.${FQDName}", !Ref FQDName]
             ResourceRecords: 
               - !Select [28, !Split [", ", !Ref FloatIPs]]
             SetIdentifier: "Qumulo FIP 29"
             Type: A
             TTL: "0"
-            Weight: "0"
+            Weight: 0
           - !Ref AWS::NoValue
         - !If
           - Provision30
-          - Name: !Sub "${RecordName}.${FQDName}"
+          - Name: !If [ProvRecordName, !Sub "${RecordName}.${FQDName}", !Ref FQDName]
             ResourceRecords: 
               - !Select [29, !Split [", ", !Ref FloatIPs]]
             SetIdentifier: "Qumulo FIP 30"
             Type: A
             TTL: "0"
-            Weight: "0"
+            Weight: 0
           - !Ref AWS::NoValue
         - !If
           - Provision31
-          - Name: !Sub "${RecordName}.${FQDName}"
+          - Name: !If [ProvRecordName, !Sub "${RecordName}.${FQDName}", !Ref FQDName]
             ResourceRecords: 
               - !Select [30, !Split [", ", !Ref FloatIPs]]
             SetIdentifier: "Qumulo FIP 31"
             Type: A
             TTL: "0"
-            Weight: "0"
+            Weight: 0
           - !Ref AWS::NoValue
         - !If
           - Provision32
-          - Name: !Sub "${RecordName}.${FQDName}"
+          - Name: !If [ProvRecordName, !Sub "${RecordName}.${FQDName}", !Ref FQDName]
             ResourceRecords: 
               - !Select [31, !Split [", ", !Ref FloatIPs]]
             SetIdentifier: "Qumulo FIP 32"
             Type: A
             TTL: "0"
-            Weight: "0"
+            Weight: 0
           - !Ref AWS::NoValue
         - !If
           - Provision33
-          - Name: !Sub "${RecordName}.${FQDName}"
+          - Name: !If [ProvRecordName, !Sub "${RecordName}.${FQDName}", !Ref FQDName]
             ResourceRecords: 
               - !Select [32, !Split [", ", !Ref FloatIPs]]
             SetIdentifier: "Qumulo FIP 33"
             Type: A
             TTL: "0"
-            Weight: "0"
+            Weight: 0
           - !Ref AWS::NoValue
         - !If
           - Provision34
-          - Name: !Sub "${RecordName}.${FQDName}"
+          - Name: !If [ProvRecordName, !Sub "${RecordName}.${FQDName}", !Ref FQDName]
             ResourceRecords: 
               - !Select [33, !Split [", ", !Ref FloatIPs]]
             SetIdentifier: "Qumulo FIP 34"
             Type: A
             TTL: "0"
-            Weight: "0"
+            Weight: 0
           - !Ref AWS::NoValue
         - !If
           - Provision35
-          - Name: !Sub "${RecordName}.${FQDName}"
+          - Name: !If [ProvRecordName, !Sub "${RecordName}.${FQDName}", !Ref FQDName]
             ResourceRecords: 
               - !Select [34, !Split [", ", !Ref FloatIPs]]
             SetIdentifier: "Qumulo FIP 35"
             Type: A
             TTL: "0"
-            Weight: "0"
+            Weight: 0
           - !Ref AWS::NoValue
         - !If
           - Provision36
-          - Name: !Sub "${RecordName}.${FQDName}"
+          - Name: !If [ProvRecordName, !Sub "${RecordName}.${FQDName}", !Ref FQDName]
             ResourceRecords: 
               - !Select [35, !Split [", ", !Ref FloatIPs]]
             SetIdentifier: "Qumulo FIP 36"
             Type: A
             TTL: "0"
-            Weight: "0"
+            Weight: 0
           - !Ref AWS::NoValue
         - !If
           - Provision37
-          - Name: !Sub "${RecordName}.${FQDName}"
+          - Name: !If [ProvRecordName, !Sub "${RecordName}.${FQDName}", !Ref FQDName]
             ResourceRecords: 
               - !Select [36, !Split [", ", !Ref FloatIPs]]
             SetIdentifier: "Qumulo FIP 37"
             Type: A
             TTL: "0"
-            Weight: "0"
+            Weight: 0
           - !Ref AWS::NoValue
         - !If
           - Provision38
-          - Name: !Sub "${RecordName}.${FQDName}"
+          - Name: !If [ProvRecordName, !Sub "${RecordName}.${FQDName}", !Ref FQDName]
             ResourceRecords: 
               - !Select [37, !Split [", ", !Ref FloatIPs]]
             SetIdentifier: "Qumulo FIP 38"
             Type: A
             TTL: "0"
-            Weight: "0"
+            Weight: 0
           - !Ref AWS::NoValue
         - !If
           - Provision39
-          - Name: !Sub "${RecordName}.${FQDName}"
+          - Name: !If [ProvRecordName, !Sub "${RecordName}.${FQDName}", !Ref FQDName]
             ResourceRecords: 
               - !Select [38, !Split [", ", !Ref FloatIPs]]
             SetIdentifier: "Qumulo FIP 39"
             Type: A
             TTL: "0"
-            Weight: "0"
+            Weight: 0
           - !Ref AWS::NoValue
         - !If
           - Provision40
-          - Name: !Sub "${RecordName}.${FQDName}"
+          - Name: !If [ProvRecordName, !Sub "${RecordName}.${FQDName}", !Ref FQDName]
             ResourceRecords: 
               - !Select [39, !Split [", ", !Ref FloatIPs]]
             SetIdentifier: "Qumulo FIP 40"
             Type: A
             TTL: "0"
-            Weight: "0"
+            Weight: 0
           - !Ref AWS::NoValue
         - !If
           - Provision41
-          - Name: !Sub "${RecordName}.${FQDName}"
+          - Name: !If [ProvRecordName, !Sub "${RecordName}.${FQDName}", !Ref FQDName]
             ResourceRecords: 
               - !Select [40, !Split [", ", !Ref FloatIPs]]
             SetIdentifier: "Qumulo FIP 41"
             Type: A
             TTL: "0"
-            Weight: "0"
+            Weight: 0
           - !Ref AWS::NoValue
         - !If
           - Provision42
-          - Name: !Sub "${RecordName}.${FQDName}"
+          - Name: !If [ProvRecordName, !Sub "${RecordName}.${FQDName}", !Ref FQDName]
             ResourceRecords: 
               - !Select [41, !Split [", ", !Ref FloatIPs]]
             SetIdentifier: "Qumulo FIP 42"
             Type: A
             TTL: "0"
-            Weight: "0"
+            Weight: 0
           - !Ref AWS::NoValue
         - !If
           - Provision43
-          - Name: !Sub "${RecordName}.${FQDName}"
+          - Name: !If [ProvRecordName, !Sub "${RecordName}.${FQDName}", !Ref FQDName]
             ResourceRecords: 
               - !Select [42, !Split [", ", !Ref FloatIPs]]
             SetIdentifier: "Qumulo FIP 43"
             Type: A
             TTL: "0"
-            Weight: "0"
+            Weight: 0
           - !Ref AWS::NoValue
         - !If
           - Provision44
-          - Name: !Sub "${RecordName}.${FQDName}"
+          - Name: !If [ProvRecordName, !Sub "${RecordName}.${FQDName}", !Ref FQDName]
             ResourceRecords: 
               - !Select [43, !Split [", ", !Ref FloatIPs]]
             SetIdentifier: "Qumulo FIP 44"
             Type: A
             TTL: "0"
-            Weight: "0"
+            Weight: 0
           - !Ref AWS::NoValue
         - !If
           - Provision45
-          - Name: !Sub "${RecordName}.${FQDName}"
+          - Name: !If [ProvRecordName, !Sub "${RecordName}.${FQDName}", !Ref FQDName]
             ResourceRecords: 
               - !Select [44, !Split [", ", !Ref FloatIPs]]
             SetIdentifier: "Qumulo FIP 45"
             Type: A
             TTL: "0"
-            Weight: "0"
+            Weight: 0
           - !Ref AWS::NoValue
         - !If
           - Provision46
-          - Name: !Sub "${RecordName}.${FQDName}"
+          - Name: !If [ProvRecordName, !Sub "${RecordName}.${FQDName}", !Ref FQDName]
             ResourceRecords: 
               - !Select [45, !Split [", ", !Ref FloatIPs]]
             SetIdentifier: "Qumulo FIP 46"
             Type: A
             TTL: "0"
-            Weight: "0"
+            Weight: 0
           - !Ref AWS::NoValue
         - !If
           - Provision47
-          - Name: !Sub "${RecordName}.${FQDName}"
+          - Name: !If [ProvRecordName, !Sub "${RecordName}.${FQDName}", !Ref FQDName]
             ResourceRecords: 
               - !Select [46, !Split [", ", !Ref FloatIPs]]
             SetIdentifier: "Qumulo FIP 47"
             Type: A
             TTL: "0"
-            Weight: "0"
+            Weight: 0
           - !Ref AWS::NoValue
         - !If
           - Provision48
-          - Name: !Sub "${RecordName}.${FQDName}"
+          - Name: !If [ProvRecordName, !Sub "${RecordName}.${FQDName}", !Ref FQDName]
             ResourceRecords: 
               - !Select [47, !Split [", ", !Ref FloatIPs]]
             SetIdentifier: "Qumulo FIP 48"
             Type: A
             TTL: "0"
-            Weight: "0"
+            Weight: 0
           - !Ref AWS::NoValue
         - !If
           - Provision49
-          - Name: !Sub "${RecordName}.${FQDName}"
+          - Name: !If [ProvRecordName, !Sub "${RecordName}.${FQDName}", !Ref FQDName]
             ResourceRecords: 
               - !Select [48, !Split [", ", !Ref FloatIPs]]
             SetIdentifier: "Qumulo FIP 49"
             Type: A
             TTL: "0"
-            Weight: "0"
+            Weight: 0
           - !Ref AWS::NoValue
         - !If
           - Provision50
-          - Name: !Sub "${RecordName}.${FQDName}"
+          - Name: !If [ProvRecordName, !Sub "${RecordName}.${FQDName}", !Ref FQDName]
             ResourceRecords: 
               - !Select [49, !Split [", ", !Ref FloatIPs]]
             SetIdentifier: "Qumulo FIP 50"
             Type: A
             TTL: "0"
-            Weight: "0"
+            Weight: 0
           - !Ref AWS::NoValue
         - !If
           - Provision51
-          - Name: !Sub "${RecordName}.${FQDName}"
+          - Name: !If [ProvRecordName, !Sub "${RecordName}.${FQDName}", !Ref FQDName]
             ResourceRecords: 
               - !Select [50, !Split [", ", !Ref FloatIPs]]
             SetIdentifier: "Qumulo FIP 51"
             Type: A
             TTL: "0"
-            Weight: "0"
+            Weight: 0
           - !Ref AWS::NoValue
         - !If
           - Provision52
-          - Name: !Sub "${RecordName}.${FQDName}"
+          - Name: !If [ProvRecordName, !Sub "${RecordName}.${FQDName}", !Ref FQDName]
             ResourceRecords: 
               - !Select [51, !Split [", ", !Ref FloatIPs]]
             SetIdentifier: "Qumulo FIP 52"
             Type: A
             TTL: "0"
-            Weight: "0"
+            Weight: 0
           - !Ref AWS::NoValue
         - !If
           - Provision53
-          - Name: !Sub "${RecordName}.${FQDName}"
+          - Name: !If [ProvRecordName, !Sub "${RecordName}.${FQDName}", !Ref FQDName]
             ResourceRecords: 
               - !Select [52, !Split [", ", !Ref FloatIPs]]
             SetIdentifier: "Qumulo FIP 53"
             Type: A
             TTL: "0"
-            Weight: "0"
+            Weight: 0
           - !Ref AWS::NoValue
         - !If
           - Provision54
-          - Name: !Sub "${RecordName}.${FQDName}"
+          - Name: !If [ProvRecordName, !Sub "${RecordName}.${FQDName}", !Ref FQDName]
             ResourceRecords: 
               - !Select [53, !Split [", ", !Ref FloatIPs]]
             SetIdentifier: "Qumulo FIP 54"
             Type: A
             TTL: "0"
-            Weight: "0"
+            Weight: 0
           - !Ref AWS::NoValue
         - !If
           - Provision55
-          - Name: !Sub "${RecordName}.${FQDName}"
+          - Name: !If [ProvRecordName, !Sub "${RecordName}.${FQDName}", !Ref FQDName]
             ResourceRecords: 
               - !Select [54, !Split [", ", !Ref FloatIPs]]
             SetIdentifier: "Qumulo FIP 55"
             Type: A
             TTL: "0"
-            Weight: "0"
+            Weight: 0
           - !Ref AWS::NoValue
         - !If
           - Provision56
-          - Name: !Sub "${RecordName}.${FQDName}"
+          - Name: !If [ProvRecordName, !Sub "${RecordName}.${FQDName}", !Ref FQDName]
             ResourceRecords: 
               - !Select [55, !Split [", ", !Ref FloatIPs]]
             SetIdentifier: "Qumulo FIP 56"
             Type: A
             TTL: "0"
-            Weight: "0"
+            Weight: 0
           - !Ref AWS::NoValue
         - !If
           - Provision57
-          - Name: !Sub "${RecordName}.${FQDName}"
+          - Name: !If [ProvRecordName, !Sub "${RecordName}.${FQDName}", !Ref FQDName]
             ResourceRecords: 
               - !Select [56, !Split [", ", !Ref FloatIPs]]
             SetIdentifier: "Qumulo FIP 57"
             Type: A
             TTL: "0"
-            Weight: "0"
+            Weight: 0
           - !Ref AWS::NoValue
         - !If
           - Provision58
-          - Name: !Sub "${RecordName}.${FQDName}"
+          - Name: !If [ProvRecordName, !Sub "${RecordName}.${FQDName}", !Ref FQDName]
             ResourceRecords: 
               - !Select [57, !Split [", ", !Ref FloatIPs]]
             SetIdentifier: "Qumulo FIP 58"
             Type: A
             TTL: "0"
-            Weight: "0"
+            Weight: 0
           - !Ref AWS::NoValue
         - !If
           - Provision59
-          - Name: !Sub "${RecordName}.${FQDName}"
+          - Name: !If [ProvRecordName, !Sub "${RecordName}.${FQDName}", !Ref FQDName]
             ResourceRecords: 
               - !Select [58, !Split [", ", !Ref FloatIPs]]
             SetIdentifier: "Qumulo FIP 59"
             Type: A
             TTL: "0"
-            Weight: "0"
+            Weight: 0
           - !Ref AWS::NoValue
         - !If
           - Provision60
-          - Name: !Sub "${RecordName}.${FQDName}"
+          - Name: !If [ProvRecordName, !Sub "${RecordName}.${FQDName}", !Ref FQDName]
             ResourceRecords: 
               - !Select [59, !Split [", ", !Ref FloatIPs]]
             SetIdentifier: "Qumulo FIP 60"
             Type: A
             TTL: "0"
-            Weight: "0"
+            Weight: 0
           - !Ref AWS::NoValue
         - !If
           - Provision61
-          - Name: !Sub "${RecordName}.${FQDName}"
+          - Name: !If [ProvRecordName, !Sub "${RecordName}.${FQDName}", !Ref FQDName]
             ResourceRecords: 
               - !Select [60, !Split [", ", !Ref FloatIPs]]
             SetIdentifier: "Qumulo FIP 61"
             Type: A
             TTL: "0"
-            Weight: "0"
+            Weight: 0
           - !Ref AWS::NoValue
         - !If
           - Provision62
-          - Name: !Sub "${RecordName}.${FQDName}"
+          - Name: !If [ProvRecordName, !Sub "${RecordName}.${FQDName}", !Ref FQDName]
             ResourceRecords: 
               - !Select [61, !Split [", ", !Ref FloatIPs]]
             SetIdentifier: "Qumulo FIP 62"
             Type: A
             TTL: "0"
-            Weight: "0"
+            Weight: 0
           - !Ref AWS::NoValue
         - !If
           - Provision63
-          - Name: !Sub "${RecordName}.${FQDName}"
+          - Name: !If [ProvRecordName, !Sub "${RecordName}.${FQDName}", !Ref FQDName]
             ResourceRecords: 
               - !Select [62, !Split [", ", !Ref FloatIPs]]
             SetIdentifier: "Qumulo FIP 63"
             Type: A
             TTL: "0"
-            Weight: "0"
+            Weight: 0
           - !Ref AWS::NoValue
         - !If
           - Provision64
-          - Name: !Sub "${RecordName}.${FQDName}"
+          - Name: !If [ProvRecordName, !Sub "${RecordName}.${FQDName}", !Ref FQDName]
             ResourceRecords: 
               - !Select [63, !Split [", ", !Ref FloatIPs]]
             SetIdentifier: "Qumulo FIP 64"
             Type: A
             TTL: "0"
-            Weight: "0"
+            Weight: 0
           - !Ref AWS::NoValue
         - !If
           - Provision65
-          - Name: !Sub "${RecordName}.${FQDName}"
+          - Name: !If [ProvRecordName, !Sub "${RecordName}.${FQDName}", !Ref FQDName]
             ResourceRecords: 
               - !Select [64, !Split [", ", !Ref FloatIPs]]
             SetIdentifier: "Qumulo FIP 65"
             Type: A
             TTL: "0"
-            Weight: "0"
+            Weight: 0
           - !Ref AWS::NoValue
         - !If
           - Provision66
-          - Name: !Sub "${RecordName}.${FQDName}"
+          - Name: !If [ProvRecordName, !Sub "${RecordName}.${FQDName}", !Ref FQDName]
             ResourceRecords: 
               - !Select [65, !Split [", ", !Ref FloatIPs]]
             SetIdentifier: "Qumulo FIP 66"
             Type: A
             TTL: "0"
-            Weight: "0"
+            Weight: 0
           - !Ref AWS::NoValue
         - !If
           - Provision67
-          - Name: !Sub "${RecordName}.${FQDName}"
+          - Name: !If [ProvRecordName, !Sub "${RecordName}.${FQDName}", !Ref FQDName]
             ResourceRecords: 
               - !Select [66, !Split [", ", !Ref FloatIPs]]
             SetIdentifier: "Qumulo FIP 67"
             Type: A
             TTL: "0"
-            Weight: "0"
+            Weight: 0
           - !Ref AWS::NoValue
         - !If
           - Provision68
-          - Name: !Sub "${RecordName}.${FQDName}"
+          - Name: !If [ProvRecordName, !Sub "${RecordName}.${FQDName}", !Ref FQDName]
             ResourceRecords: 
               - !Select [67, !Split [", ", !Ref FloatIPs]]
             SetIdentifier: "Qumulo FIP 68"
             Type: A
             TTL: "0"
-            Weight: "0"
+            Weight: 0
           - !Ref AWS::NoValue
         - !If
           - Provision69
-          - Name: !Sub "${RecordName}.${FQDName}"
+          - Name: !If [ProvRecordName, !Sub "${RecordName}.${FQDName}", !Ref FQDName]
             ResourceRecords: 
               - !Select [68, !Split [", ", !Ref FloatIPs]]
             SetIdentifier: "Qumulo FIP 69"
             Type: A
             TTL: "0"
-            Weight: "0"
+            Weight: 0
           - !Ref AWS::NoValue
         - !If
           - Provision70
-          - Name: !Sub "${RecordName}.${FQDName}"
+          - Name: !If [ProvRecordName, !Sub "${RecordName}.${FQDName}", !Ref FQDName]
             ResourceRecords: 
               - !Select [69, !Split [", ", !Ref FloatIPs]]
             SetIdentifier: "Qumulo FIP 70"
             Type: A
             TTL: "0"
-            Weight: "0"
+            Weight: 0
           - !Ref AWS::NoValue
         - !If
           - Provision71
-          - Name: !Sub "${RecordName}.${FQDName}"
+          - Name: !If [ProvRecordName, !Sub "${RecordName}.${FQDName}", !Ref FQDName]
             ResourceRecords: 
               - !Select [70, !Split [", ", !Ref FloatIPs]]
             SetIdentifier: "Qumulo FIP 71"
             Type: A
             TTL: "0"
-            Weight: "0"
+            Weight: 0
           - !Ref AWS::NoValue
         - !If
           - Provision72
-          - Name: !Sub "${RecordName}.${FQDName}"
+          - Name: !If [ProvRecordName, !Sub "${RecordName}.${FQDName}", !Ref FQDName]
             ResourceRecords: 
               - !Select [71, !Split [", ", !Ref FloatIPs]]
             SetIdentifier: "Qumulo FIP 72"
             Type: A
             TTL: "0"
-            Weight: "0"
+            Weight: 0
           - !Ref AWS::NoValue
         - !If
           - Provision73
-          - Name: !Sub "${RecordName}.${FQDName}"
+          - Name: !If [ProvRecordName, !Sub "${RecordName}.${FQDName}", !Ref FQDName]
             ResourceRecords: 
               - !Select [72, !Split [", ", !Ref FloatIPs]]
             SetIdentifier: "Qumulo FIP 73"
             Type: A
             TTL: "0"
-            Weight: "0"
+            Weight: 0
           - !Ref AWS::NoValue
         - !If
           - Provision74
-          - Name: !Sub "${RecordName}.${FQDName}"
+          - Name: !If [ProvRecordName, !Sub "${RecordName}.${FQDName}", !Ref FQDName]
             ResourceRecords: 
               - !Select [73, !Split [", ", !Ref FloatIPs]]
             SetIdentifier: "Qumulo FIP 74"
             Type: A
             TTL: "0"
-            Weight: "0"
+            Weight: 0
           - !Ref AWS::NoValue
         - !If
           - Provision75
-          - Name: !Sub "${RecordName}.${FQDName}"
+          - Name: !If [ProvRecordName, !Sub "${RecordName}.${FQDName}", !Ref FQDName]
             ResourceRecords: 
               - !Select [74, !Split [", ", !Ref FloatIPs]]
             SetIdentifier: "Qumulo FIP 75"
             Type: A
             TTL: "0"
-            Weight: "0"
+            Weight: 0
           - !Ref AWS::NoValue
         - !If
           - Provision76
-          - Name: !Sub "${RecordName}.${FQDName}"
+          - Name: !If [ProvRecordName, !Sub "${RecordName}.${FQDName}", !Ref FQDName]
             ResourceRecords: 
               - !Select [75, !Split [", ", !Ref FloatIPs]]
             SetIdentifier: "Qumulo FIP 76"
             Type: A
             TTL: "0"
-            Weight: "0"
+            Weight: 0
           - !Ref AWS::NoValue
         - !If
           - Provision77
-          - Name: !Sub "${RecordName}.${FQDName}"
+          - Name: !If [ProvRecordName, !Sub "${RecordName}.${FQDName}", !Ref FQDName]
             ResourceRecords: 
               - !Select [76, !Split [", ", !Ref FloatIPs]]
             SetIdentifier: "Qumulo FIP 77"
             Type: A
             TTL: "0"
-            Weight: "0"
+            Weight: 0
           - !Ref AWS::NoValue
         - !If
           - Provision78
-          - Name: !Sub "${RecordName}.${FQDName}"
+          - Name: !If [ProvRecordName, !Sub "${RecordName}.${FQDName}", !Ref FQDName]
             ResourceRecords: 
               - !Select [77, !Split [", ", !Ref FloatIPs]]
             SetIdentifier: "Qumulo FIP 78"
             Type: A
             TTL: "0"
-            Weight: "0"
+            Weight: 0
           - !Ref AWS::NoValue
         - !If
           - Provision79
-          - Name: !Sub "${RecordName}.${FQDName}"
+          - Name: !If [ProvRecordName, !Sub "${RecordName}.${FQDName}", !Ref FQDName]
             ResourceRecords: 
               - !Select [78, !Split [", ", !Ref FloatIPs]]
             SetIdentifier: "Qumulo FIP 79"
             Type: A
             TTL: "0"
-            Weight: "0"
+            Weight: 0
           - !Ref AWS::NoValue
         - !If
           - Provision80
-          - Name: !Sub "${RecordName}.${FQDName}"
+          - Name: !If [ProvRecordName, !Sub "${RecordName}.${FQDName}", !Ref FQDName]
             ResourceRecords: 
               - !Select [79, !Split [", ", !Ref FloatIPs]]
             SetIdentifier: "Qumulo FIP 80"
             Type: A
             TTL: "0"
-            Weight: "0"
+            Weight: 0
           - !Ref AWS::NoValue
 
           

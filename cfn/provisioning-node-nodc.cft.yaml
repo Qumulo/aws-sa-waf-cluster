@@ -336,7 +336,13 @@ Resources:
           bkt_pfx="$s3bkt/$s3pfx"
           req_ver="${QClusterVersion}"
 
-          #Functions are getqq, ssmput, ssmget, getsecret, stackprotect, ec2protect, vercomp, cmkmodpolicy, tagvols
+          if [ $(curl -sI -w "%{http_code}\\n" "s3.$region.amazonaws.com" -o /dev/null --connect-timeout 3 --max-time 5) == "405" ]; then
+            echo "S3 Reachable"
+          else
+            echo "S3 Unreachable, Inet access or VPC S3 gateway and VPC endpoints required."
+            exit 1
+          fi
+          
           if [[ -e "functions-v2.sh" ]]; then
             echo "functions-v2 exist"
           else

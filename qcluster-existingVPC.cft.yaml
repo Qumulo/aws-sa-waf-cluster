@@ -28,7 +28,7 @@ Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
       - Label:
-          default: AWS Template Configuration - aws-sa-waf-cluster version 3.6
+          default: AWS Template Configuration - aws-sa-waf-cluster version 3.7
         Parameters:
           - S3BucketName
           - S3KeyPrefix
@@ -40,7 +40,10 @@ Metadata:
           default: AWS Network Configuration
         Parameters:
           - VPCId
-          - QSgCidr
+          - QSgCidr1
+          - QSgCidr2
+          - QSgCidr3
+          - QSgCidr4                              
           - PrivateSubnetID
           - QClusterLocalZone
           - SideCarPrivateSubnetID
@@ -73,8 +76,6 @@ Metadata:
           default: Qumulo EBS Monitoring/Replacement & CloudWatch Metrics Configuration
         Parameters:
           - SideCarProv
-          - SideCarUsername
-          - SideCarPassword
           - SideCarVersion
           - SideCarSNSTopic
 
@@ -95,8 +96,14 @@ Metadata:
         default: "AWS Private Subnet ID"
       PublicSubnetID:
         default: "AWS Public Subnet ID"
-      QSgCidr:
-        default: "Qumulo Security Group "
+      QSgCidr1:
+        default: "Qumulo Security Group CIDR #1 "
+      QSgCidr2:
+        default: "OPTIONAL: Qumulo Security Group CIDR #2 "
+      QSgCidr3:
+        default: "OPTIONAL: Qumulo Security Group CIDR #3 "
+      QSgCidr4:
+        default: "OPTIONAL: Qumulo Security Group CIDR #4 "                        
       QPublicMgmt: 
         default: "OPTIONAL: Provision Public IP for Qumulo Management"
       QPublicRepl: 
@@ -130,7 +137,7 @@ Metadata:
       QPermissionsBoundary:
         default: "OPTIONAL: AWS Permissions Boundary Policy Name"
       QInstanceRecoveryTopic:
-        default: "OPTIONAL: Qumulo Instance Recovery Topic"
+        default: "OPTIONAL: Qumulo EC2 Instance Recovery Topic"
       QAuditLog:
         default: "OPTIONAL: Send Qumulo Audit Log messages to CloudWatch Logs? "
       TermProtection:
@@ -143,12 +150,8 @@ Metadata:
         default: "Qumulo Sidecar Lambdas Private Subnet ID"
       SideCarVersion:
         default: "Qumulo Sidecar Software Version "
-      SideCarUsername:
-        default: "Qumulo Sidecar Username "
-      SideCarPassword:
-        default: "Qumulo Sidecar Password "
       SideCarSNSTopic:
-        default: "OPTIONAL: Qumulo Sidecar SNS Topic "
+        default: "OPTIONAL: Qumulo EBS Volume Recovery SNS Topic "
 
 Parameters:
 
@@ -223,12 +226,11 @@ Parameters:
     Description: AWS Private Subnet in the VPC.
 
   DomainName:
-    Description: "IF NONE.local, R53 config will be skipped. Private R53 DNS Fully Qualified Domain Name.  The .local domain is one way to provide public query resolution for overlapping names: qumulo.com vs qumulo.local"
-    AllowedPattern: '[a-zA-Z0-9-]+\..+'
+    Description: "IF blank, R53 config will be skipped. If populated a Private R53 DNS Fully Qualified Domain Name will be created.  The .local suffix is one way to private DNS query resolution for the Qumulo cluster: e.g. qumulo.companyname.local"
+    AllowedPattern: '^$|^([a-zA-Z0-9-]+\..+)$'
     MaxLength: '255'
-    MinLength: '2'
     Type: String
-    Default: "NONE.local"  
+    Default: ""
 
   QDr:
     AllowedValues:
@@ -239,9 +241,9 @@ Parameters:
     Default: "NO"
 
   QFloatRecordName:
-    Description: ONLY APPLICABLE if a domain name was provided above.  Record Name for R53 Private Hosted Zone Qumulo Cluster floating IPs.
+    Description: "ONLY APPLICABLE if a domain name was provided above.  Record Name for R53 Private Hosted Zone Qumulo Cluster floating IPs.  This will add a prefix to the example FQDN above: e.g. cluster1.qumulo.mycompanyname.local"
     Type: String
-    Default: qumulo
+    Default: ""
 
   QNodeCount:
     Description: "Total number of EC2 instances, or Qumulo Nodes, in the Qumulo Cluster: (4-10).  NOTE: This field may be used to add nodes with a CloudFormation Stack Update after initial provisioning."
@@ -345,7 +347,7 @@ Parameters:
     MaxLength: 11
     MinLength: 5
     Type: String
-    Default: "4.2.3"
+    Default: "4.2.4"
 
   QClusterAdminPwd:
     AllowedPattern: "^(?=.*[a-z])(?=.*[A-Z])(?=.*[@$!%*?&\\-_])[A-Za-z\\d@$!%*?&\\-_]{8,}$"
@@ -387,11 +389,29 @@ Parameters:
     Type: String
     Default: ""
 
-  QSgCidr:
+  QSgCidr1:
     AllowedPattern: "^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/(3[0-2]|[1-2][0-9]|[0-9]))$"
-    Description: An IPv4 CIDR block for specifying the generated security group's allowed addresses for inbound traffic. Set to the VPC CIDR.
+    Description: An IPv4 CIDR block for specifying the generated security group's allowed addresses for inbound traffic. Typically set to the VPC CIDR.
     Type: String
-    Default: "172.31.0.0/16"
+    Default: "10.0.0.0/16"
+
+  QSgCidr2:
+    AllowedPattern: "^$|^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/(3[0-2]|[1-2][0-9]|[0-9]))$"
+    Description: An IPv4 CIDR block for specifying the generated security group's allowed addresses for inbound traffic.
+    Type: String
+    Default: ""
+
+  QSgCidr3:
+    AllowedPattern: "^$|^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/(3[0-2]|[1-2][0-9]|[0-9]))$"
+    Description: An IPv4 CIDR block for specifying the generated security group's allowed addresses for inbound traffic.
+    Type: String
+    Default: ""
+
+  QSgCidr4:
+    AllowedPattern: "^$|^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/(3[0-2]|[1-2][0-9]|[0-9]))$"
+    Description: An IPv4 CIDR block for specifying the generated security group's allowed addresses for inbound traffic.
+    Type: String
+    Default: ""
 
   TermProtection:
     Description: Enable Termination Protection for EC2 instances and the CloudFormation stack
@@ -436,19 +456,7 @@ Parameters:
     MaxLength: 11
     MinLength: 5
     Type: String
-    Default: "4.2.3"
-
-  SideCarUsername:
-    Type: String
-    Default: SideCarUser
-
-  SideCarPassword:
-    AllowedPattern: "^(?=.*[a-z])(?=.*[A-Z])(?=.*[@$!%*?&\\-_])[A-Za-z\\d@$!%*?&\\-_]{8,}$"
-    Description: "Minumum 8 characters and must include one each of: uppercase, lowercase, and a special character.  This field must be filled in regardless of the Sidecar provisioning option above."
-    MaxLength: 128
-    MinLength: 8
-    Type: String
-    NoEcho: "true"
+    Default: "4.2.4"
 
   SideCarSNSTopic:
     Description: Optionally enter an SNS topic ARN that lambda errors and successful disk replacements will be published to.
@@ -456,10 +464,28 @@ Parameters:
     Default: ""
 
 Conditions:
+  
+  ProvSg2: !Not
+    - !Equals
+      - !Ref QSgCidr2
+      - ""
+
+  ProvSg3: !Not
+    - !Equals
+      - !Ref QSgCidr3
+      - ""      
+
+  ProvSg4: !Not
+    - !Equals
+      - !Ref QSgCidr4
+      - ""
+
+  AddQSgCidr: !Or [Condition: ProvSg2, Condition: ProvSg3, Condition: ProvSg4]
+
   ProvR53: !Not
     - !Equals
       - !Ref DomainName
-      - "NONE.local"
+      - ""
 
   ProvSideCar: !Equals
     - !Ref SideCarProv
@@ -669,8 +695,8 @@ Resources:
     Type: "AWS::CloudFormation::Stack"
     Properties:
       Parameters:
-        SideCarUsername: !If [ProvSideCar, !Ref SideCarUsername, ""]
-        SideCarPassword: !If [ProvSideCar, !Ref SideCarPassword, ""]
+        SideCarUsername: !If [ProvSideCar, "SideCarUser", ""]
+        SideCarPassword: !If [ProvSideCar, !Ref QClusterAdminPwd, ""]
         ClusterAdminPwd: !Ref QClusterAdminPwd
       TemplateURL: !Sub "https://${S3BucketName}.s3.${AWS::URLSuffix}/${S3KeyPrefix}cfn/store-secrets.cft.yaml"
       TimeoutInMinutes: 150      
@@ -686,7 +712,6 @@ Resources:
 
   QSTACK:
     Type: 'AWS::CloudFormation::Stack'
-    DependsOn: QIAMSTACK
     Properties:
       Parameters:
         ClusterName: !Ref QClusterName
@@ -696,7 +721,7 @@ Resources:
         InstanceRecoveryTopic: !Ref QInstanceRecoveryTopic
         InstanceType: !Ref QInstanceType
         KeyName: !Ref KeyPair
-        SgCidr: !Ref QSgCidr
+        SgCidr: !Ref QSgCidr1
         SubnetId: !Ref PrivateSubnetID
         VolumesEncryptionKey: !Ref VolumesEncryptionKey
         VpcId: !Ref VPCId
@@ -712,24 +737,34 @@ Resources:
               - "-SA.cft.json"
       TimeoutInMinutes: 150
 
+  QADDCIDRSTACK:
+    Type: 'AWS::CloudFormation::Stack'
+    Condition: AddQSgCidr
+    Properties:
+      Parameters:
+        QSgId: !GetAtt QSTACK.Outputs.ClusterSGID        
+        QSgCidr2: !Ref QSgCidr2        
+        QSgCidr3: !Ref QSgCidr3   
+        QSgCidr4: !Ref QSgCidr4     
+      TemplateURL: !Sub "https://${S3BucketName}.s3.${AWS::URLSuffix}/${S3KeyPrefix}cfn/qadd-sg-cidrs.cft.yaml"
+      TimeoutInMinutes: 150       
+
   QSIDECARSTACK:
     Type: 'AWS::CloudFormation::Stack'
-    DependsOn: QSTACK
     Condition: ProvSideCar
     Properties:
       Parameters:
         SecurityGroup: !GetAtt QSTACK.Outputs.ClusterSGID
         SNSTopic: !Ref SideCarSNSTopic
         Subnet: !If [LocalAZ, !Ref SideCarPrivateSubnetID, !Ref PrivateSubnetID]
-        Username: !Ref SideCarUsername
-        Password: !Ref SideCarPassword
+        Username: "SideCarUser"
+        Password: !Ref QClusterAdminPwd
         Hosts: !GetAtt QSTACK.Outputs.ClusterPrivateIPs
       TemplateURL: !Sub "https://qumulo-sidecar-us-east-1.s3.amazonaws.com/${SideCarVersion}/sidecar_cft.json"
       TimeoutInMinutes: 150
 
   PROVISIONINGSTACK:
     Type: 'AWS::CloudFormation::Stack'
-    DependsOn: QSTACK
     Properties:
       Parameters:
         SideCarProv: !Ref SideCarProv
@@ -738,7 +773,7 @@ Resources:
         KeyName: !Ref KeyPair
         Region: !Ref AWS::Region
         PrivateSubnetId: !Ref PrivateSubnetID
-        PrivateSubnetCidr: !Ref QSgCidr
+        PrivateSubnetCidr: !Ref QSgCidr1
         Node1IP: !Select [0, !Split [", ", !GetAtt QSTACK.Outputs.ClusterPrivateIPs]]
         NodeIPs: !GetAtt QSTACK.Outputs.ClusterPrivateIPs
         FloatIPs: !GetAtt QSTACK.Outputs.ClusterSecondaryPrivateIPs
@@ -762,7 +797,6 @@ Resources:
 
   CLOUDWATCHSTACK:
     Type: 'AWS::CloudFormation::Stack'
-    DependsOn: QSTACK
     Properties:
       Parameters:
         QClusterName: !Ref QClusterName        
@@ -776,7 +810,6 @@ Resources:
 
   MGMTNLBSTACK:
     Type: 'AWS::CloudFormation::Stack'
-    DependsOn: QSTACK
     Condition: ProvMgmt
     Properties:
       Parameters:
@@ -790,7 +823,6 @@ Resources:
 
   DNSSTACK:
     Type: 'AWS::CloudFormation::Stack'
-    DependsOn: QSTACK
     Condition: ProvR53
     Properties:
       Parameters:

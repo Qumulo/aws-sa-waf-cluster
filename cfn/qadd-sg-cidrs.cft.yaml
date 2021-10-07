@@ -1,0 +1,384 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+# MIT License
+#
+# Copyright (c) 2021 Qumulo, Inc.
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal 
+# in the Software without restriction, including without limitation the rights 
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell 
+# copies of the Software, and to permit persons to whom the Software is 
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all 
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, 
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE 
+# SOFTWARE.
+        
+Parameters:
+  QSgId:
+    Type: String
+  QSgCidr2:
+    Type: String
+  QSgCidr3:
+    Type: String
+  QSgCidr4:
+    Type: String
+
+Conditions:
+  ProvSg2: !Not
+    - !Equals
+      - !Ref QSgCidr2
+      - ""
+
+  ProvSg3: !Not
+    - !Equals
+      - !Ref QSgCidr3
+      - ""      
+
+  ProvSg4: !Not
+    - !Equals
+      - !Ref QSgCidr4
+      - ""
+
+Resources:
+  QumuloSgCIDR2Port21:
+    Type: 'AWS::EC2::SecurityGroupIngress'
+    Condition: ProvSg2
+    Properties:
+      Description: 'TCP ports for FTP'
+      GroupId: !Ref QSgId
+      CidrIp: !Ref QSgCidr2
+      IpProtocol: tcp
+      FromPort: 21
+      ToPort: 21
+  QumuloSgCIDR2Port22:
+    Type: 'AWS::EC2::SecurityGroupIngress'
+    Condition: ProvSg2
+    Properties:
+      Description: 'TCP ports for SSH'
+      GroupId: !Ref QSgId
+      CidrIp: !Ref QSgCidr2
+      IpProtocol: tcp
+      FromPort: 22
+      ToPort: 22
+  QumuloSgCIDR2Port80:
+    Type: 'AWS::EC2::SecurityGroupIngress'
+    Condition: ProvSg2
+    Properties:
+      Description: 'TCP ports for HTTP'
+      GroupId: !Ref QSgId
+      CidrIp: !Ref QSgCidr2
+      IpProtocol: tcp
+      FromPort: 80
+      ToPort: 80
+  QumuloSgCIDR2Port111U:
+    Type: 'AWS::EC2::SecurityGroupIngress'
+    Condition: ProvSg2
+    Properties:
+      Description: 'UDP ports for SUNRPC'
+      GroupId: !Ref QSgId
+      CidrIp: !Ref QSgCidr2
+      IpProtocol: udp
+      FromPort: 111
+      ToPort: 111
+  QumuloSgCIDR2Port111T:
+    Type: 'AWS::EC2::SecurityGroupIngress'
+    Condition: ProvSg2
+    Properties:
+      Description: 'TCP ports for SUNRPC'
+      GroupId: !Ref QSgId
+      CidrIp: !Ref QSgCidr2
+      IpProtocol: tcp
+      FromPort: 111
+      ToPort: 111      
+  QumuloSgCIDR2Port443:
+    Type: 'AWS::EC2::SecurityGroupIngress'
+    Condition: ProvSg2
+    Properties:
+      Description: 'TCP ports for HTTPS'
+      GroupId: !Ref QSgId
+      CidrIp: !Ref QSgCidr2
+      IpProtocol: tcp
+      FromPort: 443
+      ToPort: 443         
+  QumuloSgCIDR2Port445:
+    Type: 'AWS::EC2::SecurityGroupIngress'
+    Condition: ProvSg2
+    Properties:
+      Description: 'TCP ports for SMB'
+      GroupId: !Ref QSgId
+      CidrIp: !Ref QSgCidr2
+      IpProtocol: tcp
+      FromPort: 445
+      ToPort: 445            
+  QumuloSgCIDR2Port2049U:
+    Type: 'AWS::EC2::SecurityGroupIngress'
+    Condition: ProvSg2
+    Properties:
+      Description: 'UDP ports for NFS'
+      GroupId: !Ref QSgId
+      CidrIp: !Ref QSgCidr2
+      IpProtocol: udp
+      FromPort: 2049
+      ToPort: 2049
+  QumuloSgCIDR2Port2049T:
+    Type: 'AWS::EC2::SecurityGroupIngress'
+    Condition: ProvSg2
+    Properties:
+      Description: 'TCP ports for NFS'
+      GroupId: !Ref QSgId
+      CidrIp: !Ref QSgCidr2
+      IpProtocol: tcp
+      FromPort: 2049
+      ToPort: 2049      
+  QumuloSgCIDR2Port3712:
+    Type: 'AWS::EC2::SecurityGroupIngress'
+    Condition: ProvSg2
+    Properties:
+      Description: 'TCP ports for Replication'
+      GroupId: !Ref QSgId
+      CidrIp: !Ref QSgCidr2
+      IpProtocol: tcp
+      FromPort: 3712
+      ToPort: 3713         
+  QumuloSgCIDR2Port8000:
+    Type: 'AWS::EC2::SecurityGroupIngress'
+    Condition: ProvSg2
+    Properties:
+      Description: 'TCP ports for REST'
+      GroupId: !Ref QSgId
+      CidrIp: !Ref QSgCidr2
+      IpProtocol: tcp
+      FromPort: 8000
+      ToPort: 8000     
+
+  QumuloSgCIDR3Port21:
+    Type: 'AWS::EC2::SecurityGroupIngress'
+    Condition: ProvSg3
+    Properties:
+      Description: 'TCP ports for FTP'
+      GroupId: !Ref QSgId
+      CidrIp: !Ref QSgCidr3
+      IpProtocol: tcp
+      FromPort: 21
+      ToPort: 21
+  QumuloSgCIDR3Port22:
+    Type: 'AWS::EC2::SecurityGroupIngress'
+    Condition: ProvSg3
+    Properties:
+      Description: 'TCP ports for SSH'
+      GroupId: !Ref QSgId
+      CidrIp: !Ref QSgCidr3
+      IpProtocol: tcp
+      FromPort: 22
+      ToPort: 22
+  QumuloSgCIDR3Port80:
+    Type: 'AWS::EC2::SecurityGroupIngress'
+    Condition: ProvSg3
+    Properties:
+      Description: 'TCP ports for HTTP'
+      GroupId: !Ref QSgId
+      CidrIp: !Ref QSgCidr3
+      IpProtocol: tcp
+      FromPort: 80
+      ToPort: 80
+  QumuloSgCIDR3Port111U:
+    Type: 'AWS::EC2::SecurityGroupIngress'
+    Condition: ProvSg3
+    Properties:
+      Description: 'UDP ports for SUNRPC'
+      GroupId: !Ref QSgId
+      CidrIp: !Ref QSgCidr3
+      IpProtocol: udp
+      FromPort: 111
+      ToPort: 111
+  QumuloSgCIDR3Port111T:
+    Type: 'AWS::EC2::SecurityGroupIngress'
+    Condition: ProvSg3
+    Properties:
+      Description: 'TCP ports for SUNRPC'
+      GroupId: !Ref QSgId
+      CidrIp: !Ref QSgCidr3
+      IpProtocol: tcp
+      FromPort: 111
+      ToPort: 111      
+  QumuloSgCIDR3Port443:
+    Type: 'AWS::EC2::SecurityGroupIngress'
+    Condition: ProvSg3
+    Properties:
+      Description: 'TCP ports for HTTPS'
+      GroupId: !Ref QSgId
+      CidrIp: !Ref QSgCidr3
+      IpProtocol: tcp
+      FromPort: 443
+      ToPort: 443         
+  QumuloSgCIDR3Port445:
+    Type: 'AWS::EC2::SecurityGroupIngress'
+    Condition: ProvSg3
+    Properties:
+      Description: 'TCP ports for SMB'
+      GroupId: !Ref QSgId
+      CidrIp: !Ref QSgCidr3
+      IpProtocol: tcp
+      FromPort: 445
+      ToPort: 445            
+  QumuloSgCIDR3Port2049U:
+    Type: 'AWS::EC2::SecurityGroupIngress'
+    Condition: ProvSg3
+    Properties:
+      Description: 'UDP ports for NFS'
+      GroupId: !Ref QSgId
+      CidrIp: !Ref QSgCidr3
+      IpProtocol: udp
+      FromPort: 2049
+      ToPort: 2049
+  QumuloSgCIDR3Port2049T:
+    Type: 'AWS::EC2::SecurityGroupIngress'
+    Condition: ProvSg3
+    Properties:
+      Description: 'TCP ports for NFS'
+      GroupId: !Ref QSgId
+      CidrIp: !Ref QSgCidr3
+      IpProtocol: tcp
+      FromPort: 2049
+      ToPort: 2049      
+  QumuloSgCIDR3Port3712:
+    Type: 'AWS::EC2::SecurityGroupIngress'
+    Condition: ProvSg3
+    Properties:
+      Description: 'TCP ports for Replication'
+      GroupId: !Ref QSgId
+      CidrIp: !Ref QSgCidr3
+      IpProtocol: tcp
+      FromPort: 3712
+      ToPort: 3713         
+  QumuloSgCIDR3Port8000:
+    Type: 'AWS::EC2::SecurityGroupIngress'
+    Condition: ProvSg3
+    Properties:
+      Description: 'TCP ports for REST'
+      GroupId: !Ref QSgId
+      CidrIp: !Ref QSgCidr3
+      IpProtocol: tcp
+      FromPort: 8000
+      ToPort: 8000           
+
+  QumuloSgCIDR4Port21:
+    Type: 'AWS::EC2::SecurityGroupIngress'
+    Condition: ProvSg4
+    Properties:
+      Description: 'TCP ports for FTP'
+      GroupId: !Ref QSgId
+      CidrIp: !Ref QSgCidr4
+      IpProtocol: tcp
+      FromPort: 21
+      ToPort: 21
+  QumuloSgCIDR4Port22:
+    Type: 'AWS::EC2::SecurityGroupIngress'
+    Condition: ProvSg4
+    Properties:
+      Description: 'TCP ports for SSH'
+      GroupId: !Ref QSgId
+      CidrIp: !Ref QSgCidr4
+      IpProtocol: tcp
+      FromPort: 22
+      ToPort: 22
+  QumuloSgCIDR4Port80:
+    Type: 'AWS::EC2::SecurityGroupIngress'
+    Condition: ProvSg4
+    Properties:
+      Description: 'TCP ports for HTTP'
+      GroupId: !Ref QSgId
+      CidrIp: !Ref QSgCidr4
+      IpProtocol: tcp
+      FromPort: 80
+      ToPort: 80
+  QumuloSgCIDR4Port111U:
+    Type: 'AWS::EC2::SecurityGroupIngress'
+    Condition: ProvSg4
+    Properties:
+      Description: 'UDP ports for SUNRPC'
+      GroupId: !Ref QSgId
+      CidrIp: !Ref QSgCidr4
+      IpProtocol: udp
+      FromPort: 111
+      ToPort: 111
+  QumuloSgCIDR4Port111T:
+    Type: 'AWS::EC2::SecurityGroupIngress'
+    Condition: ProvSg4
+    Properties:
+      Description: 'TCP ports for SUNRPC'
+      GroupId: !Ref QSgId
+      CidrIp: !Ref QSgCidr4
+      IpProtocol: tcp
+      FromPort: 111
+      ToPort: 111      
+  QumuloSgCIDR4Port443:
+    Type: 'AWS::EC2::SecurityGroupIngress'
+    Condition: ProvSg4
+    Properties:
+      Description: 'TCP ports for HTTPS'
+      GroupId: !Ref QSgId
+      CidrIp: !Ref QSgCidr4
+      IpProtocol: tcp
+      FromPort: 443
+      ToPort: 443         
+  QumuloSgCIDR4Port445:
+    Type: 'AWS::EC2::SecurityGroupIngress'
+    Condition: ProvSg4
+    Properties:
+      Description: 'TCP ports for SMB'
+      GroupId: !Ref QSgId
+      CidrIp: !Ref QSgCidr4
+      IpProtocol: tcp
+      FromPort: 445
+      ToPort: 445            
+  QumuloSgCIDR4Port2049U:
+    Type: 'AWS::EC2::SecurityGroupIngress'
+    Condition: ProvSg4
+    Properties:
+      Description: 'UDP ports for NFS'
+      GroupId: !Ref QSgId
+      CidrIp: !Ref QSgCidr4
+      IpProtocol: udp
+      FromPort: 2049
+      ToPort: 2049
+  QumuloSgCIDR4Port2049T:
+    Type: 'AWS::EC2::SecurityGroupIngress'
+    Condition: ProvSg4
+    Properties:
+      Description: 'TCP ports for NFS'
+      GroupId: !Ref QSgId
+      CidrIp: !Ref QSgCidr4
+      IpProtocol: tcp
+      FromPort: 2049
+      ToPort: 2049      
+  QumuloSgCIDR4Port3712:
+    Type: 'AWS::EC2::SecurityGroupIngress'
+    Condition: ProvSg4
+    Properties:
+      Description: 'TCP ports for Replication'
+      GroupId: !Ref QSgId
+      CidrIp: !Ref QSgCidr4
+      IpProtocol: tcp
+      FromPort: 3712
+      ToPort: 3713         
+  QumuloSgCIDR4Port8000:
+    Type: 'AWS::EC2::SecurityGroupIngress'
+    Condition: ProvSg4
+    Properties:
+      Description: 'TCP ports for REST'
+      GroupId: !Ref QSgId
+      CidrIp: !Ref QSgCidr4
+      IpProtocol: tcp
+      FromPort: 8000
+      ToPort: 8000
+          
