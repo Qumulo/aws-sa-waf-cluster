@@ -1,5 +1,9 @@
-[![Qumulo Logo](https://qumulo.com/wp-content/uploads/2021/06/CloudQ-Logo_OnLight.png)](http://qumulo.com)
+# THIS REPOSITORY IS DEPRECATED #
 
+* Please use the [Qumulo Cloud Q Quick Start](https://aws.amazon.com/quickstart/architecture/qumulo-cloud-q/) for all new deployments.
+* This repo will be left as is for previous deployments that reference it.
+
+<!--
 # aws-sa-waf-cluster
 AWS CloudFormation templates to deploy a Qumulo cluster with one to 20 instances per the AWS Well Architected Framework.
 Supports usable capacities from 1TB to 6PB with all Qumulo Core features.
@@ -20,6 +24,7 @@ For architectural details, resource requirements, deployment instructions, and c
 
 Reference Architecture:
 ![Ref Arch](./docs/aws-sa-waf-cluster.png)
+-->
 
 ## Help
 
