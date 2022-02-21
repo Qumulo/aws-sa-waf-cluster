@@ -1,4 +1,4 @@
-# THIS REPOSITORY IS DEPRECATED #
+# THIS REPOSITORY IS DEPRECATED # [![Latest Release](https://img.shields.io/github/release/qumulo/aws-sa-waf-cluster.svg)](https://github.com/qumulo/aws-sa-waf-cluster/releases)
 
 * Please use the [Qumulo Cloud Q Quick Start](https://aws.amazon.com/quickstart/architecture/qumulo-cloud-q/) for all new deployments.
 * This repo will be left as is for previous deployments that reference it.
